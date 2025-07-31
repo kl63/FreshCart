@@ -1,4 +1,4 @@
-name: Deploy FreshCart Site
+name: Deploy FreshCart App
 
 on:
   push:
@@ -21,41 +21,39 @@ jobs:
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.5.1
         with:
-          ssh-private-key: ${{ secrets.FRESHCART_DEPLOY_KEY }}
+          ssh-private-key: ${{ secrets.FRESHCART_SSH_KEY }}
 
-      - name: Deploy FreshCart
+      - name: Deploy to DigitalOcean
         env:
           HOST: 159.89.245.206
           USERNAME: kevinlin192003
           TARGET_DIR: /var/www/FreshCart-site
           APP_NAME: FreshCart-site
           PORT: 4000
+
         run: |
           ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << 'EOF'
             set -e
             cd $TARGET_DIR
 
-            echo "Fetching latest code..."
-            if [ -d ".git" ]; then
-              git fetch origin
-              git reset --hard origin/main
-            else
-              rm -rf *
-              git clone https://github.com/kl63/FreshCart.git .
-            fi
+            echo "Fetching and resetting to latest commit..."
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
 
             echo "Installing dependencies..."
-            npm install
+            npm install --production
 
-            echo "Building the app..."
+            echo "Building Next.js app..."
             npm run build
 
-            echo "Restarting app with PM2..."
+            echo "Restarting with PM2..."
             if pm2 list | grep -q $APP_NAME; then
               pm2 restart $APP_NAME
             else
               pm2 start npm --name $APP_NAME -- start -- --port=$PORT
             fi
 
+            echo "Saving PM2 state..."
             pm2 save
           EOF
