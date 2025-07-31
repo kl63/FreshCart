@@ -37,4 +37,26 @@ jobs:
             echo "🔹 Removing old project directory..."
             rm -rf $TARGET_DIR
 
-            echo "🔹 Recrea
+            echo "🔹 Recreating target directory..."
+            mkdir -p $TARGET_DIR
+
+            echo "🔹 Cloning repo into $TARGET_DIR ..."
+            git clone git@github.com:kl63/FreshCart.git $TARGET_DIR
+
+            cd $TARGET_DIR
+
+            echo "🔹 Installing dependencies..."
+            npm install --legacy-peer-deps
+
+            echo "🔹 Building Next.js app..."
+            npm run build
+
+            echo "🔹 Restarting with PM2..."
+            if pm2 list | grep -q $APP_NAME; then
+              pm2 restart $APP_NAME
+            else
+              pm2 start npm --name $APP_NAME -- start -- --port=$PORT
+            fi
+
+            pm2 save
+          EOF
