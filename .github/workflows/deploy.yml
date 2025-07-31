@@ -21,7 +21,7 @@ jobs:
       - name: Deploy to DigitalOcean
         env:
           HOST: 159.89.245.206
-          USERNAME: root
+          USERNAME: kevinlin192003
           TARGET_DIR: /var/www/FreshCart-site
           APP_NAME: FreshCart-site
           PORT: 4000  # ✅ match Nginx + ecosystem config
