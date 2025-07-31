@@ -1,4 +1,4 @@
-name: Deploy FreshCart Site
+name: Deploy Next.js App
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Set up SSH
+      - name: Add SSH key
         uses: webfactory/ssh-agent@v0.5.1
         with:
           ssh-private-key: ${{ secrets.FRESHCART_DEPLOY_KEY }}
@@ -30,20 +30,20 @@ jobs:
           TARGET_DIR: /var/www/FreshCart-site
           APP_NAME: FreshCart-site
           PORT: 4000
+
         run: |
           ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << 'EOF'
             set -e
-
-            echo "🔹 Checking repo state..."
+            echo "🔹 Navigating to project directory..."
             if [ ! -d "$TARGET_DIR/.git" ]; then
               echo "⚠️ No .git found, recloning repo..."
-              sudo rm -rf $TARGET_DIR
+              rm -rf $TARGET_DIR
               git clone git@github.com:kl63/FreshCart.git $TARGET_DIR
             fi
 
             cd $TARGET_DIR
 
-            echo "🔹 Resetting to latest commit..."
+            echo "🔹 Fetching latest code..."
             git fetch origin main
             git reset --hard origin/main
 
@@ -54,7 +54,11 @@ jobs:
             npm run build
 
             echo "🔹 Restarting with PM2..."
-            pm2 delete $APP_NAME || true
-            pm2 start npm --name $APP_NAME -- start -- --port=$PORT
+            if pm2 list | grep -q $APP_NAME; then
+              pm2 restart $APP_NAME
+            else
+              pm2 start npm --name $APP_NAME -- start -- --port=$PORT
+            fi
+
             pm2 save
           EOF
