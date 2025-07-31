@@ -1,4 +1,4 @@
-name: Deploy FreshCart App
+name: Deploy FreshCart Site
 
 on:
   push:
@@ -18,12 +18,12 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Add SSH key
+      - name: Set up SSH
         uses: webfactory/ssh-agent@v0.5.1
         with:
           ssh-private-key: ${{ secrets.FRESHCART_DEPLOY_KEY }}
 
-      - name: Deploy to DigitalOcean
+      - name: Deploy to Droplet
         env:
           HOST: 159.89.245.206
           USERNAME: kevinlin192003
@@ -34,25 +34,26 @@ jobs:
           ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << 'EOF'
             set -e
 
-            echo "Navigating to project directory..."
-            cd $TARGET_DIR
+            echo "🔹 Navigating to project directory..."
+            cd $TARGET_DIR || (
+              echo "FreshCart-site not found, cloning repo..."
+              cd /var/www
+              git clone git@github.com:kl63/FreshCart.git FreshCart-site
+              cd FreshCart-site
+            )
 
-            echo "Fetching and resetting to latest GitHub commit..."
+            echo "🔹 Resetting to latest commit..."
             git fetch origin main
             git reset --hard origin/main
 
-            echo "Installing dependencies..."
+            echo "🔹 Installing dependencies..."
             npm install --legacy-peer-deps
 
-            echo "Building Next.js app..."
+            echo "🔹 Building Next.js app..."
             npm run build
 
-            echo "Restarting with PM2..."
-            if pm2 list | grep -q $APP_NAME; then
-              pm2 restart $APP_NAME
-            else
-              pm2 start npm --name $APP_NAME -- start -- --port=$PORT
-            fi
-
+            echo "🔹 Restarting with PM2..."
+            pm2 delete $APP_NAME || true
+            pm2 start npm --name $APP_NAME -- start -- --port=$PORT
             pm2 save
           EOF
