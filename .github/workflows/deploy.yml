@@ -32,7 +32,7 @@ jobs:
           USERNAME: root
           TARGET_DIR: /var/www/FreshCart-site
           APP_NAME: FreshCart-site
-          PORT: 3000
+          PORT: 4000
 
         run: |
           ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << EOF
