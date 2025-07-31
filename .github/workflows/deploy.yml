@@ -3,7 +3,7 @@ name: Deploy Next.js App
 on:
   push:
     branches:
-      - main # Change if deploying a different branch
+      - main
 
 jobs:
   deploy:
@@ -18,56 +18,36 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Check Node.js version
-        run: node -v
-
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.1
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
       - name: Deploy to DigitalOcean
         env:
           HOST: 159.89.245.206
           USERNAME: root
           TARGET_DIR: /var/www/FreshCart-site
           APP_NAME: FreshCart-site
-          PORT: 4000
+          PORT: 4000  # ✅ match Nginx + ecosystem config
 
         run: |
-          ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << EOF
+          ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << 'EOF'
             set -e
-            echo "Navigating to project directory..."
             cd $TARGET_DIR
 
-            echo "Fetching and resetting to latest GitHub commit..."
-            git fetch origin
-            git reset --hard origin/main
+            if [ ! -d ".git" ]; then
+              echo "Repo not found, cloning fresh..."
+              git clone -b main git@github.com:YOUR_USERNAME/YOUR_REPO.git .
+            else
+              echo "Updating repo..."
+              git fetch origin
+              git reset --hard origin/main
+            fi
 
             echo "Installing dependencies..."
-            npm install
+            npm ci
 
             echo "Building Next.js app..."
             npm run build
 
-            echo "Checking if PM2 is installed..."
-            if ! command -v pm2 &> /dev/null
-            then
-              echo "PM2 not found, installing..."
-              npm install -g pm2
-            else
-              echo "PM2 is already installed"
-            fi
+            echo "Restarting app with PM2..."
+            pm2 restart $APP_NAME || pm2 start ecosystem.config.js --only $APP_NAME
 
-            echo "Checking if PM2 process exists..."
-            if pm2 list | grep -q $APP_NAME; then
-              echo "Restarting application: $APP_NAME"
-              pm2 restart $APP_NAME
-            else
-              echo "Starting application: $APP_NAME"
-              pm2 start npm --name $APP_NAME -- start -- --port=$PORT
-            fi
-
-            echo "Saving PM2 state..."
             pm2 save
           EOF
