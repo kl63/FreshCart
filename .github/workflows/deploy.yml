@@ -36,7 +36,7 @@ jobs:
             set -e
             echo "🔹 Navigating to project directory..."
             if [ ! -d "$TARGET_DIR/.git" ]; then
-              echo "⚠️ No .git found, recloning repo..."
+              echo "⚠️ No .git found, recloning repo into $TARGET_DIR..."
               rm -rf $TARGET_DIR
               git clone git@github.com:kl63/FreshCart.git $TARGET_DIR
             fi
