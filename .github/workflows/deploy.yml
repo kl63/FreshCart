@@ -34,19 +34,13 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << 'EOF'
             set -e
-            echo "🔹 Navigating to project directory..."
-            
-            if [ ! -d "$TARGET_DIR/.git" ]; then
-              echo "⚠️ No .git found, cleaning old directory and recloning..."
-              rm -rf $TARGET_DIR
-              git clone git@github.com:kl63/FreshCart.git $TARGET_DIR
-            fi
+            echo "🔹 Cleaning old project directory..."
+            rm -rf $TARGET_DIR
+
+            echo "🔹 Cloning repo fresh..."
+            git clone git@github.com:kl63/FreshCart.git $TARGET_DIR
 
             cd $TARGET_DIR
-
-            echo "🔹 Fetching latest code..."
-            git fetch origin main
-            git reset --hard origin/main
 
             echo "🔹 Installing dependencies..."
             npm install --legacy-peer-deps
