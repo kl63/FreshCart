@@ -8,13 +8,14 @@ import { mockProducts } from '@/data/mock-products'
 import { formatPrice } from '@/lib/utils'
 
 interface ProductPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function ProductPage({ params }: ProductPageProps) {
-  const product = mockProducts.find(p => p.id === params.id)
+export default async function ProductPage({ params }: ProductPageProps) {
+  const { id } = await params
+  const product = mockProducts.find(p => p.id === id)
   
   if (!product) {
     notFound()

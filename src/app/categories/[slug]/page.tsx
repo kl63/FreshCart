@@ -4,13 +4,14 @@ import { Badge } from '@/components/ui/badge'
 import { mockCategories, mockProducts } from '@/data/mock-products'
 
 interface CategoryPageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
-export default function CategoryPage({ params }: CategoryPageProps) {
-  const category = mockCategories.find(cat => cat.slug === params.slug)
+export default async function CategoryPage({ params }: CategoryPageProps) {
+  const { slug } = await params
+  const category = mockCategories.find(cat => cat.slug === slug)
   
   if (!category) {
     notFound()
@@ -18,8 +19,8 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
   // Filter products by category
   const categoryProducts = mockProducts.filter(product => 
-    product.category.toLowerCase().replace(/[^a-z0-9]/g, '-') === params.slug ||
-    (params.slug === 'organic' && product.isOrganic)
+    product.category.toLowerCase().replace(/[^a-z0-9]/g, '-') === slug ||
+    (slug === 'organic' && product.isOrganic)
   )
 
   return (
@@ -38,7 +39,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
             <Badge variant="secondary" className="text-sm">
               {categoryProducts.length} products available
             </Badge>
-            {params.slug === 'organic' && (
+            {slug === 'organic' && (
               <Badge variant="organic" className="text-sm">
                 Certified Organic
               </Badge>
@@ -94,13 +95,13 @@ export default function CategoryPage({ params }: CategoryPageProps) {
               in every item. Our {category.name.toLowerCase()} section features both 
               conventional and organic options to meet all your dietary needs.
             </p>
-            {params.slug === 'produce' && (
+            {slug === 'produce' && (
               <p className="mt-4">
                 Our produce is delivered fresh daily from local farms and trusted suppliers. 
                 We guarantee the quality and freshness of all our fruits and vegetables.
               </p>
             )}
-            {params.slug === 'organic' && (
+            {slug === 'organic' && (
               <p className="mt-4">
                 All organic products are certified by USDA and meet strict organic standards. 
                 No synthetic pesticides, herbicides, or fertilizers are used in their production.
