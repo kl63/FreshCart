@@ -67,7 +67,31 @@ export default function WishlistPage() {
   }
 
   const addToCart = (item: typeof mockWishlistItems[0]) => {
-    addItem(item as any, 1)
+    // Convert wishlist item to Product type for cart
+    const product = {
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      originalPrice: item.originalPrice,
+      image: item.image,
+      category: item.category,
+      inStock: item.inStock,
+      isOnSale: item.isOnSale,
+      rating: item.rating,
+      unit: item.unit,
+      slug: item.name.toLowerCase().replace(/\s+/g, '-'),
+      description: '',
+      images: [item.image],
+      tags: [],
+      isOrganic: false,
+      isFresh: false,
+      isFeatured: false,
+      stockQuantity: 100,
+      weight: 1,
+      nutritionInfo: undefined,
+      reviewCount: 0
+    }
+    addItem(product, 1)
   }
 
   const moveAllToCart = () => {
