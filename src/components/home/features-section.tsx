@@ -9,20 +9,20 @@ const features = [
   },
   {
     icon: ClockIcon,
-    title: 'Fresh Guarantee',
-    description: 'We guarantee the freshness of our produce or your money back.',
+    title: 'Quality Guaranteed',
+    description: 'Supporting local communities and farmers is at the heart of everything we do. Your money back.',
     color: 'text-blue-600'
   },
   {
     icon: ShieldCheckIcon,
-    title: 'Quality Assured',
-    description: 'All products are carefully selected and quality-checked before delivery.',
+    title: 'Sustainability Assured',
+    description: 'Every product is carefully selected and quality-checked before reaching your doorstep.',
     color: 'text-purple-600'
   },
   {
     icon: HeartIcon,
     title: 'Organic Options',
-    description: 'Wide selection of certified organic and natural products for healthy living.',
+    description: 'Committed to eco-friendly practices and reducing our environmental footprint. Wide selection of certified organic and natural products for healthy living.',
     color: 'text-red-600'
   }
 ]
@@ -36,7 +36,7 @@ export default function FeaturesSection() {
             Why Choose FreshCart?
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            We're committed to bringing you the freshest groceries with unmatched convenience
+            We&apos;re committed to bringing you the freshest groceries with unmatched convenience
           </p>
         </div>
 

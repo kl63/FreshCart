@@ -160,7 +160,7 @@ export default function CartPage() {
                   {cart.discountCode && (
                     <div className="mt-2 flex items-center justify-between text-sm">
                       <span className="text-green-600">
-                        Code "{cart.discountCode}" applied
+                        Code &ldquo;{cart.discountCode}&rdquo; applied
                       </span>
                       <button
                         onClick={removeDiscountCode}

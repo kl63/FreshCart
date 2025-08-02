@@ -66,14 +66,8 @@ export default function WishlistPage() {
     setWishlistItems(prev => prev.filter(item => item.id !== itemId))
   }
 
-  const addToCart = (item: any) => {
-    addItem({
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      image: item.image,
-      quantity: 1
-    })
+  const addToCart = (item: typeof mockWishlistItems[0]) => {
+    addItem(item as any, 1)
   }
 
   const moveAllToCart = () => {
@@ -239,7 +233,7 @@ export default function WishlistPage() {
               <div className="grid md:grid-cols-3 gap-6 text-sm text-gray-600">
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">📧 Get Notified</h4>
-                  <p>We'll email you when items go on sale or come back in stock.</p>
+                  We&apos;ll email you when items go on sale or come back in stock.
                 </div>
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">🔄 Easy Reordering</h4>

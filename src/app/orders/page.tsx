@@ -160,7 +160,7 @@ export default function OrdersPage() {
               <div>
                 <h4 className="font-medium mb-2">Order Issues</h4>
                 <p className="text-sm text-gray-600 mb-3">
-                  Having problems with an order? We're here to help.
+                  Having problems with an order? We&apos;re here to help.
                 </p>
                 <Button variant="outline" size="sm">
                   Contact Support

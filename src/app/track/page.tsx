@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import Image from 'next/image'
 
 const mockOrderStatuses = [
   {
@@ -28,10 +29,10 @@ const mockOrderStatuses = [
 
 export default function TrackPage() {
   const [orderId, setOrderId] = useState('')
-  const [trackingResult, setTrackingResult] = useState<any>(null)
+  const [trackingResult, setTrackingResult] = useState<typeof mockOrderStatuses[0] | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleTrackOrder = async (e: React.FormEvent) => {
+  const handleTrackOrder = (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     
@@ -142,7 +143,7 @@ export default function TrackPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {trackingResult.timeline.map((step: any, index: number) => (
+                  {trackingResult.timeline.map((step, index: number) => (
                     <div key={index} className="flex items-center space-x-4">
                       <div className={`w-4 h-4 rounded-full ${
                         step.completed ? 'bg-green-500' : 'bg-gray-300'
@@ -174,11 +175,13 @@ export default function TrackPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {trackingResult.items.map((item: any, index: number) => (
+                  {trackingResult.items.map((item, index: number) => (
                     <div key={index} className="flex items-center space-x-4">
-                      <img
+                      <Image
                         src={item.image}
                         alt={item.name}
+                        width={48}
+                        height={48}
                         className="w-12 h-12 rounded-lg object-cover"
                       />
                       <div className="flex-1">
@@ -202,10 +205,10 @@ export default function TrackPage() {
                 Order Not Found
               </h3>
               <p className="text-gray-600 mb-6">
-                We couldn't find an order with number "{orderId}". Please check your order number and try again.
+                We couldn&apos;t find an order with number &ldquo;{orderId}&rdquo;. Please check your order number and try again.
               </p>
               <div className="space-y-2 text-sm text-gray-600">
-                <p>• Make sure you've entered the correct order number</p>
+                <p>• Make sure you&apos;ve entered the correct order number</p>
                 <p>• Check your confirmation email for the exact order number</p>
                 <p>• Orders may take a few minutes to appear in our tracking system</p>
               </div>
@@ -221,9 +224,9 @@ export default function TrackPage() {
           <CardContent>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-medium text-gray-900 mb-2">Can't find your order?</h4>
+                <h4 className="font-medium text-gray-900 mb-2">Can&apos;t find your order?</h4>
                 <p className="text-sm text-gray-600 mb-3">
-                  If you're having trouble tracking your order, our customer service team is here to help.
+                  If you&apos;re having trouble tracking your order, our customer service team is here to help.
                 </p>
                 <Button variant="outline" size="sm">
                   Contact Support

@@ -96,7 +96,7 @@ export default function PrivacyPage() {
               To exercise these rights, please contact us at privacy@freshcart.com.
             </p>
 
-            <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Children's Privacy</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Children&apos;s Privacy</h2>
             <p className="mb-6">
               Our services are not intended for children under 13 years of age. We do not knowingly 
               collect personal information from children under 13. If we become aware that we have 
@@ -127,7 +127,7 @@ export default function PrivacyPage() {
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Changes to This Policy</h2>
             <p className="mb-6">
               We may update this Privacy Policy from time to time. We will notify you of any material 
-              changes by posting the new policy on our website and updating the "Last updated" date. 
+              changes by posting the new policy on our website and updating the &ldquo;Last updated&rdquo; date. 
               Your continued use of our services after changes are posted constitutes acceptance of 
               the updated policy.
             </p>

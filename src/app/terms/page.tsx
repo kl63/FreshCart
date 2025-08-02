@@ -11,7 +11,7 @@ export default function TermsPage() {
             </p>
 
             <p className="mb-6">
-              Welcome to FreshCart. These Terms of Service ("Terms") govern your use of our website, 
+              Welcome to FreshCart. These Terms of Service (&ldquo;Terms&rdquo;) govern your use of our website, 
               mobile application, and services. By accessing or using FreshCart, you agree to be 
               bound by these Terms.
             </p>
@@ -106,7 +106,7 @@ export default function TermsPage() {
 
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">10. Disclaimers</h2>
             <p className="mb-6">
-              Our services are provided "as is" and "as available" without warranties of any kind. 
+              Our services are provided &ldquo;as is&rdquo; and &ldquo;as available&rdquo; without warranties of any kind. 
               We disclaim all warranties, express or implied, including merchantability, fitness 
               for a particular purpose, and non-infringement. We do not guarantee that our services 
               will be uninterrupted, error-free, or secure.
@@ -144,7 +144,7 @@ export default function TermsPage() {
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">15. Changes to Terms</h2>
             <p className="mb-6">
               We reserve the right to modify these Terms at any time. We will notify you of material 
-              changes by posting the updated Terms on our website and updating the "Last updated" 
+              changes by posting the updated Terms on our website and updating the &ldquo;Last updated&rdquo; 
               date. Your continued use of our services after changes are posted constitutes acceptance 
               of the new Terms.
             </p>

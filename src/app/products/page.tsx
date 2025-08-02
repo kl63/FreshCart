@@ -1,4 +1,4 @@
-import { useState } from 'react'
+'use client'
 import ProductCard from '@/components/product/product-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

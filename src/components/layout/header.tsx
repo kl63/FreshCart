@@ -3,9 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ShoppingCartIcon, UserIcon, MagnifyingGlassIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
-import { Button } from '@/components/ui/button'
 import { useCartStore } from '@/store/cart'
-import { cn } from '@/lib/utils'
 
 const navigation = [
   { name: 'Fresh Produce', href: '/categories/produce' },

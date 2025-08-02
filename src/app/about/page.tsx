@@ -77,12 +77,12 @@ export default function AboutPage() {
                 </p>
                 <p>
                   What started as a small local delivery service has grown into a comprehensive 
-                  online supermarket, serving thousands of families across the region. We've 
+                  online supermarket, serving thousands of families across the region. We&apos;ve 
                   built strong partnerships with local farms, organic producers, and trusted 
                   suppliers to ensure that every product meets our high standards.
                 </p>
                 <p>
-                  Today, FreshCart is more than just a grocery delivery service – we're a 
+                  Today, FreshCart is more than just a grocery delivery service – we&apos;re a 
                   community of people who believe that good food should be accessible, 
                   sustainable, and delivered with care.
                 </p>
@@ -196,10 +196,10 @@ export default function AboutPage() {
         <div className="text-center bg-green-50 rounded-lg p-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h2>
           <p className="text-xl text-gray-700 max-w-4xl mx-auto leading-relaxed">
-            "To make fresh, quality groceries accessible to everyone while supporting 
+            &ldquo;To make fresh, quality groceries accessible to everyone while supporting 
             local communities and promoting sustainable practices. We believe that good 
-            food is a foundation for healthy, happy lives, and we're committed to 
-            delivering that foundation right to your doorstep."
+            food is a foundation for healthy, happy lives, and we&apos;re committed to 
+            delivering that foundation right to your doorstep.&rdquo;
           </p>
         </div>
       </div>

@@ -34,7 +34,7 @@ export default function ContactPage() {
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Contact Us</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+            We&apos;d love to hear from you. Send us a message and we&apos;ll respond as soon as possible.
           </p>
         </div>
 
@@ -199,7 +199,7 @@ export default function ContactPage() {
                       className="mr-2"
                     />
                     <label htmlFor="newsletter" className="text-sm text-gray-600">
-                      I'd like to receive updates about new products and special offers
+                      I&apos;d like to receive updates about new products and special offers
                     </label>
                   </div>
 
@@ -232,15 +232,15 @@ export default function ContactPage() {
                     </h4>
                     <p className="text-gray-600 text-sm">
                       Yes! We have a wide selection of certified organic produce, dairy, 
-                      and pantry items. Look for the "Organic" badge on product pages.
+                      and pantry items. Look for the &ldquo;Organic&rdquo; badge on product pages.
                     </p>
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2">
-                      What's your return policy?
+                      What&apos;s your return policy?
                     </h4>
                     <p className="text-gray-600 text-sm">
-                      We guarantee the freshness and quality of all our products. If you're 
+                      We guarantee the freshness and quality of all our products. If you&apos;re 
                       not satisfied, contact us within 24 hours for a full refund or replacement.
                     </p>
                   </div>
@@ -249,7 +249,7 @@ export default function ContactPage() {
                       How can I track my order?
                     </h4>
                     <p className="text-gray-600 text-sm">
-                      Once your order is confirmed, you'll receive a tracking link via email 
+                      Once your order is confirmed, you&apos;ll receive a tracking link via email 
                       and SMS. You can also track your order in your account dashboard.
                     </p>
                   </div>

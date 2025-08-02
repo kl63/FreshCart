@@ -77,7 +77,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
               No products found
             </h3>
             <p className="text-gray-600">
-              We're working on adding more products to this category.
+              We&apos;re working on adding more products to this category.
             </p>
           </div>
         )}
