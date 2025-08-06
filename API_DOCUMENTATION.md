@@ -63,13 +63,13 @@ POST /auth/logout
 
 ### Get User Profile
 ```http
-GET /users/profile
+GET /freshcart/users/profile
 ```
 **Headers:** `Authorization: Bearer <token>`
 
 ### Update User Profile
 ```http
-PUT /users/profile
+PUT /freshcart/users/profile
 ```
 **Headers:** `Authorization: Bearer <token>`
 **Body:**
@@ -84,7 +84,7 @@ PUT /users/profile
 
 ### Change Password
 ```http
-PUT /users/password
+PUT /freshcart/users/password
 ```
 **Headers:** `Authorization: Bearer <token>`
 **Body:**
@@ -118,19 +118,88 @@ POST /auth/reset-password
 }
 ```
 
+### FreshCart-Specific Authentication Endpoints
+
+#### FreshCart Register User
+```http
+POST /freshcart/auth/register
+```
+**Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "firstName": "John",
+  "lastName": "Doe",
+  "phone": "+1234567890"
+}
+```
+
+#### FreshCart Login User
+```http
+POST /freshcart/auth/login
+```
+**Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+#### FreshCart Refresh Token
+```http
+POST /freshcart/auth/refresh
+```
+**Body:**
+```json
+{
+  "refreshToken": "refresh_token_here"
+}
+```
+
+#### FreshCart Logout
+```http
+POST /freshcart/auth/logout
+```
+**Headers:** `Authorization: Bearer <token>`
+
+#### FreshCart Forgot Password
+```http
+POST /freshcart/auth/forgot-password
+```
+**Body:**
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+#### FreshCart Reset Password
+```http
+POST /freshcart/auth/reset-password
+```
+**Body:**
+```json
+{
+  "token": "reset_token",
+  "newPassword": "newpassword123"
+}
+```
+
 ---
 
 ## 2. User Addresses
 
 ### Get User Addresses
 ```http
-GET /users/addresses
+GET /freshcart/users/addresses
 ```
 **Headers:** `Authorization: Bearer <token>`
 
-### Add Address
+### Add User Address
 ```http
-POST /users/addresses
+POST /freshcart/users/addresses
 ```
 **Headers:** `Authorization: Bearer <token>`
 **Body:**
@@ -149,15 +218,15 @@ POST /users/addresses
 }
 ```
 
-### Update Address
+### Update User Address
 ```http
-PUT /users/addresses/:addressId
+PUT /freshcart/users/addresses/:addressId
 ```
 **Headers:** `Authorization: Bearer <token>`
 
-### Delete Address
+### Delete User Address
 ```http
-DELETE /users/addresses/:addressId
+DELETE /freshcart/users/addresses/:addressId
 ```
 **Headers:** `Authorization: Bearer <token>`
 
@@ -167,7 +236,7 @@ DELETE /users/addresses/:addressId
 
 ### Get All Categories
 ```http
-GET /categories
+GET /freshcart/categories
 ```
 **Query Parameters:**
 - `page` (optional): Page number (default: 1)
@@ -176,17 +245,17 @@ GET /categories
 
 ### Get Category by ID
 ```http
-GET /categories/:categoryId
+GET /freshcart/categories/:categoryId
 ```
 
 ### Get Category by Slug
 ```http
-GET /categories/slug/:slug
+GET /freshcart/categories/slug/:slug
 ```
 
 ### Create Category (Admin)
 ```http
-POST /categories
+POST /freshcart/categories
 ```
 **Headers:** `Authorization: Bearer <admin_token>`
 **Body:**
@@ -205,13 +274,13 @@ POST /categories
 
 ### Update Category (Admin)
 ```http
-PUT /categories/:categoryId
+PUT /freshcart/categories/:categoryId
 ```
 **Headers:** `Authorization: Bearer <admin_token>`
 
 ### Delete Category (Admin)
 ```http
-DELETE /categories/:categoryId
+DELETE /freshcart/categories/:categoryId
 ```
 **Headers:** `Authorization: Bearer <admin_token>`
 
@@ -221,7 +290,7 @@ DELETE /categories/:categoryId
 
 ### Get All Products
 ```http
-GET /products
+GET /freshcart/products
 ```
 **Query Parameters:**
 - `page` (optional): Page number (default: 1)
@@ -238,27 +307,27 @@ GET /products
 
 ### Get Product by ID
 ```http
-GET /products/:productId
+GET /freshcart/products/:productId
 ```
 
 ### Get Product by Slug
 ```http
-GET /products/slug/:slug
+GET /freshcart/products/slug/:slug
 ```
 
 ### Get Featured Products
 ```http
-GET /products/featured
+GET /freshcart/products/featured
 ```
 
 ### Get Related Products
 ```http
-GET /products/:productId/related
+GET /freshcart/products/:productId/related
 ```
 
 ### Search Products
 ```http
-GET /products/search
+GET /freshcart/products/search
 ```
 **Query Parameters:**
 - `q`: Search query
@@ -268,7 +337,7 @@ GET /products/search
 
 ### Create Product (Admin)
 ```http
-POST /products
+POST /freshcart/products
 ```
 **Headers:** `Authorization: Bearer <admin_token>`
 **Body:**
@@ -302,19 +371,19 @@ POST /products
 
 ### Update Product (Admin)
 ```http
-PUT /products/:productId
+PUT /freshcart/products/:productId
 ```
 **Headers:** `Authorization: Bearer <admin_token>`
 
 ### Delete Product (Admin)
 ```http
-DELETE /products/:productId
+DELETE /freshcart/products/:productId
 ```
 **Headers:** `Authorization: Bearer <admin_token>`
 
 ### Update Product Stock (Admin)
 ```http
-PATCH /products/:productId/stock
+PATCH /freshcart/products/:productId/stock
 ```
 **Headers:** `Authorization: Bearer <admin_token>`
 **Body:**
@@ -331,13 +400,13 @@ PATCH /products/:productId/stock
 
 ### Get Cart
 ```http
-GET /cart
+GET /freshcart/cart
 ```
 **Headers:** `Authorization: Bearer <token>`
 
 ### Add Item to Cart
 ```http
-POST /cart/items
+POST /freshcart/cart/items
 ```
 **Headers:** `Authorization: Bearer <token>`
 **Body:**
@@ -350,7 +419,7 @@ POST /cart/items
 
 ### Update Cart Item
 ```http
-PUT /cart/items/:itemId
+PUT /freshcart/cart/items/:itemId
 ```
 **Headers:** `Authorization: Bearer <token>`
 **Body:**
@@ -362,19 +431,19 @@ PUT /cart/items/:itemId
 
 ### Remove Cart Item
 ```http
-DELETE /cart/items/:itemId
+DELETE /freshcart/cart/items/:itemId
 ```
 **Headers:** `Authorization: Bearer <token>`
 
 ### Clear Cart
 ```http
-DELETE /cart
+DELETE /freshcart/cart
 ```
 **Headers:** `Authorization: Bearer <token>`
 
 ### Apply Discount Code
 ```http
-POST /cart/discount
+POST /freshcart/cart/discount
 ```
 **Headers:** `Authorization: Bearer <token>`
 **Body:**
@@ -386,7 +455,7 @@ POST /cart/discount
 
 ### Remove Discount Code
 ```http
-DELETE /cart/discount
+DELETE /freshcart/cart/discount
 ```
 **Headers:** `Authorization: Bearer <token>`
 
