@@ -7,7 +7,17 @@ export const mockCategories: Category[] = [
     slug: 'produce',
     description: 'Fresh fruits and vegetables',
     icon: '🥬',
-    productCount: 156
+    image: null,
+    parent_id: null,
+    is_active: true,
+    is_featured: false,
+    sort_order: 0,
+    meta_title: null,
+    meta_description: null,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    children: [],
+    product_count: 156
   },
   {
     id: '2',
@@ -15,7 +25,17 @@ export const mockCategories: Category[] = [
     slug: 'meat-seafood',
     description: 'Premium quality meat and fresh seafood',
     icon: '🥩',
-    productCount: 89
+    image: null,
+    parent_id: null,
+    is_active: true,
+    is_featured: false,
+    sort_order: 0,
+    meta_title: null,
+    meta_description: null,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    children: [],
+    product_count: 89
   },
   {
     id: '3',
@@ -23,7 +43,17 @@ export const mockCategories: Category[] = [
     slug: 'dairy',
     description: 'Fresh dairy products and farm eggs',
     icon: '🥛',
-    productCount: 67
+    image: null,
+    parent_id: null,
+    is_active: true,
+    is_featured: false,
+    sort_order: 0,
+    meta_title: null,
+    meta_description: null,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    children: [],
+    product_count: 67
   },
   {
     id: '4',
@@ -31,7 +61,17 @@ export const mockCategories: Category[] = [
     slug: 'bakery',
     description: 'Freshly baked bread and pastries',
     icon: '🍞',
-    productCount: 45
+    image: null,
+    parent_id: null,
+    is_active: true,
+    is_featured: false,
+    sort_order: 0,
+    meta_title: null,
+    meta_description: null,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    children: [],
+    product_count: 45
   },
   {
     id: '5',
@@ -39,7 +79,17 @@ export const mockCategories: Category[] = [
     slug: 'pantry',
     description: 'Essential pantry items and dry goods',
     icon: '🥫',
-    productCount: 234
+    image: null,
+    parent_id: null,
+    is_active: true,
+    is_featured: false,
+    sort_order: 0,
+    meta_title: null,
+    meta_description: null,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    children: [],
+    product_count: 234
   },
   {
     id: '6',
@@ -47,7 +97,17 @@ export const mockCategories: Category[] = [
     slug: 'frozen',
     description: 'Frozen foods and ice cream',
     icon: '❄️',
-    productCount: 123
+    image: null,
+    parent_id: null,
+    is_active: true,
+    is_featured: false,
+    sort_order: 0,
+    meta_title: null,
+    meta_description: null,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    children: [],
+    product_count: 123
   },
   {
     id: '7',
@@ -55,7 +115,17 @@ export const mockCategories: Category[] = [
     slug: 'organic',
     description: 'Certified organic products',
     icon: '🌱',
-    productCount: 178
+    image: null,
+    parent_id: null,
+    is_active: true,
+    is_featured: false,
+    sort_order: 0,
+    meta_title: null,
+    meta_description: null,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    children: [],
+    product_count: 178
   }
 ]
 

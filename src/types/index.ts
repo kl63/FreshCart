@@ -1,25 +1,27 @@
 export interface Product {
   id: string
   name: string
-  description: string
+  slug: string
   price: number
-  originalPrice?: number
-  discountPercent?: number
-  image: string
+  original_price: number | null
+  thumbnail: string
+  is_organic: boolean
+  is_on_sale: boolean
+  in_stock: boolean
+  rating_average: number
+  rating_count: number
+  discount_percentage: number
+  // Optional fields for detailed product view
+  description?: string
   images?: string[]
-  category: string
+  category?: string
   subcategory?: string
   brand?: string
   weight?: number
-  weightUnit?: string
-  inStock: boolean
-  stockQuantity?: number
-  rating?: number
-  reviewCount?: number
-  isOrganic?: boolean
-  isFresh?: boolean
-  isOnSale?: boolean
-  nutritionInfo?: NutritionInfo
+  weight_unit?: string
+  stock_quantity?: number
+  is_fresh?: boolean
+  nutrition_info?: NutritionInfo
   tags?: string[]
   sku?: string
   barcode?: string
@@ -40,12 +42,19 @@ export interface Category {
   id: string
   name: string
   slug: string
-  description?: string
-  image?: string
-  icon?: string
-  parentId?: string
-  subcategories?: Category[]
-  productCount?: number
+  description: string | null
+  icon: string | null
+  image: string | null
+  parent_id: string | null
+  is_active: boolean
+  is_featured: boolean
+  sort_order: number
+  meta_title: string | null
+  meta_description: string | null
+  created_at: string
+  updated_at: string
+  children: Category[]
+  product_count: number | null
 }
 
 export interface CartItem {

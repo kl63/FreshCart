@@ -1,25 +1,38 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ShoppingCartIcon, UserIcon, MagnifyingGlassIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useCartStore } from '@/store/cart'
-
-const navigation = [
-  { name: 'Fresh Produce', href: '/categories/produce' },
-  { name: 'Meat & Seafood', href: '/categories/meat-seafood' },
-  { name: 'Dairy & Eggs', href: '/categories/dairy' },
-  { name: 'Bakery', href: '/categories/bakery' },
-  { name: 'Pantry', href: '/categories/pantry' },
-  { name: 'Frozen', href: '/categories/frozen' },
-  { name: 'Organic', href: '/categories/organic' },
-]
+import { fetchAllCategories } from '@/lib/categories'
+import { Category } from '@/types'
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
   const { getItemCount } = useCartStore()
   const cartItemCount = getItemCount()
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        setLoading(true)
+        const fetchedCategories = await fetchAllCategories()
+        // Show first 6 categories in navigation
+        setCategories(fetchedCategories.slice(0, 6))
+      } catch (err) {
+        console.error('Error loading categories for navigation:', err)
+        // Fallback to empty array if API fails
+        setCategories([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadCategories()
+  }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -107,16 +120,83 @@ export default function Header() {
         </div>
 
         {/* Desktop navigation */}
-        <nav className="hidden md:flex space-x-8 py-4 border-t border-gray-100">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="text-gray-700 hover:text-green-600 font-medium transition-colors"
-            >
-              {item.name}
-            </Link>
-          ))}
+        <nav className="hidden md:flex items-center space-x-8 py-4 border-t border-gray-100">
+          <Link
+            href="/"
+            className="text-gray-700 hover:text-green-600 font-medium transition-colors"
+          >
+            Home
+          </Link>
+          
+          {/* Categories Dropdown */}
+          <div className="relative group">
+            <button className="flex items-center text-gray-700 hover:text-green-600 font-medium transition-colors">
+              Categories
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {/* Dropdown Menu */}
+            <div className="absolute left-0 mt-2 w-64 bg-white rounded-md shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="py-2">
+                {loading ? (
+                  // Loading skeleton
+                  Array.from({ length: 6 }).map((_, index) => (
+                    <div key={index} className="px-4 py-2">
+                      <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+                    </div>
+                  ))
+                ) : (
+                  categories.map((category) => (
+                    <Link
+                      key={category.id}
+                      href={`/categories/${category.slug}`}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors"
+                    >
+                      {category.name}
+                    </Link>
+                  ))
+                )}
+                <div className="border-t border-gray-100 mt-2 pt-2">
+                  <Link
+                    href="/categories"
+                    className="block px-4 py-2 text-sm text-green-600 hover:bg-green-50 font-medium"
+                  >
+                    View All Categories →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <Link
+            href="/products"
+            className="text-gray-700 hover:text-green-600 font-medium transition-colors"
+          >
+            Products
+          </Link>
+          
+          <Link
+            href="/deals"
+            className="text-gray-700 hover:text-green-600 font-medium transition-colors"
+          >
+            Deals
+          </Link>
+          
+          <Link
+            href="/about"
+            className="text-gray-700 hover:text-green-600 font-medium transition-colors"
+          >
+            About
+          </Link>
+          
+          <Link
+            href="/contact"
+            className="text-gray-700 hover:text-green-600 font-medium transition-colors"
+          >
+            Contact
+          </Link>
         </nav>
       </div>
 
@@ -144,16 +224,76 @@ export default function Header() {
 
           {/* Mobile navigation */}
           <nav className="px-4 py-2 space-y-1">
-            {navigation.map((item) => (
+            <Link
+              href="/"
+              className="block py-3 text-gray-700 hover:text-green-600 font-medium border-b border-gray-100"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Home
+            </Link>
+            
+            <Link
+              href="/products"
+              className="block py-3 text-gray-700 hover:text-green-600 font-medium border-b border-gray-100"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Products
+            </Link>
+            
+            <Link
+              href="/deals"
+              className="block py-3 text-gray-700 hover:text-green-600 font-medium border-b border-gray-100"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Deals
+            </Link>
+            
+            {/* Categories Section */}
+            <div className="py-2">
+              <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                Categories
+              </div>
+              {loading ? (
+                // Loading skeleton
+                Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="h-8 bg-gray-200 rounded animate-pulse mb-1" />
+                ))
+              ) : (
+                categories.map((category) => (
+                  <Link
+                    key={category.id}
+                    href={`/categories/${category.slug}`}
+                    className="block py-2 pl-4 text-gray-600 hover:text-green-600 text-sm"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {category.name}
+                  </Link>
+                ))
+              )}
               <Link
-                key={item.name}
-                href={item.href}
-                className="block py-2 text-gray-700 hover:text-green-600 font-medium"
+                href="/categories"
+                className="block py-2 pl-4 text-green-600 hover:text-green-700 font-medium text-sm"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                {item.name}
+                View All Categories →
               </Link>
-            ))}
+            </div>
+            
+            <Link
+              href="/about"
+              className="block py-3 text-gray-700 hover:text-green-600 font-medium border-t border-gray-100"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              About
+            </Link>
+            
+            <Link
+              href="/contact"
+              className="block py-3 text-gray-700 hover:text-green-600 font-medium"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Contact
+            </Link>
           </nav>
         </div>
       )}

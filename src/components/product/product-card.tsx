@@ -26,7 +26,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
     e.preventDefault()
     e.stopPropagation()
     
-    if (!product.inStock) return
+    if (!product.in_stock) return
     
     setIsLoading(true)
     
@@ -43,9 +43,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
     setIsWishlisted(!isWishlisted)
   }
 
-  const discountedPrice = product.discountPercent 
-    ? product.price * (1 - product.discountPercent / 100)
-    : product.price
+
 
   return (
     <Card className={`group hover:shadow-lg transition-all duration-300 overflow-hidden ${className}`}>
@@ -53,28 +51,43 @@ export default function ProductCard({ product, className }: ProductCardProps) {
         <div className="relative">
           {/* Product Image */}
           <div className="aspect-square overflow-hidden bg-gray-100">
-            <Image
-              src={product.image}
-              alt={product.name}
-              width={300}
-              height={300}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
+            {product.thumbnail && product.thumbnail.trim() !== '' ? (
+              <Image
+                src={product.thumbnail}
+                alt={product.name}
+                width={300}
+                height={300}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = '/images/placeholder-product.jpg'
+                }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                <div className="text-gray-400 text-center">
+                  <svg className="w-12 h-12 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                  </svg>
+                  <p className="text-xs">No Image</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Badges */}
           <div className="absolute top-2 left-2 flex flex-col gap-1">
-            {product.isOnSale && product.discountPercent && (
+            {product.is_on_sale && product.discount_percentage > 0 && (
               <Badge variant="sale" className="text-xs">
-                -{product.discountPercent}%
+                -{Math.round(product.discount_percentage)}%
               </Badge>
             )}
-            {product.isOrganic && (
+            {product.is_organic && (
               <Badge variant="organic" className="text-xs">
                 Organic
               </Badge>
             )}
-            {product.isFresh && (
+            {product.is_fresh && (
               <Badge variant="fresh" className="text-xs">
                 Fresh
               </Badge>
@@ -94,7 +107,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
           </button>
 
           {/* Stock Status */}
-          {!product.inStock && (
+          {!product.in_stock && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
               <span className="bg-white px-3 py-1 rounded-full text-sm font-medium text-gray-900">
                 Out of Stock
@@ -119,19 +132,19 @@ export default function ProductCard({ product, className }: ProductCardProps) {
             {/* Weight */}
             {product.weight && (
               <p className="text-sm text-gray-600">
-                {product.weight} {product.weightUnit || 'lb'}
+                {product.weight} {product.weight_unit || 'lb'}
               </p>
             )}
 
             {/* Rating */}
-            {product.rating && (
+            {product.rating_average > 0 && (
               <div className="flex items-center space-x-1">
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => (
                     <StarIcon
                       key={i}
                       className={`h-4 w-4 ${
-                        i < Math.floor(product.rating!)
+                        i < Math.floor(product.rating_average)
                           ? 'text-yellow-400 fill-current'
                           : 'text-gray-300'
                       }`}
@@ -139,7 +152,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
                   ))}
                 </div>
                 <span className="text-sm text-gray-600">
-                  ({product.reviewCount || 0})
+                  ({product.rating_count || 0})
                 </span>
               </div>
             )}
@@ -147,11 +160,11 @@ export default function ProductCard({ product, className }: ProductCardProps) {
             {/* Price */}
             <div className="flex items-center space-x-2">
               <span className="text-lg font-bold text-green-600">
-                {formatPrice(discountedPrice)}
+                {formatPrice(product.price)}
               </span>
-              {product.discountPercent && (
+              {product.original_price && product.is_on_sale && (
                 <span className="text-sm text-gray-500 line-through">
-                  {formatPrice(product.price)}
+                  {formatPrice(product.original_price)}
                 </span>
               )}
             </div>
@@ -160,7 +173,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
           {/* Add to Cart Button */}
           <Button
             onClick={handleAddToCart}
-            disabled={!product.inStock || isLoading}
+            disabled={!product.in_stock || isLoading}
             className="w-full mt-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-300"
             size="sm"
           >
