@@ -59,13 +59,21 @@ export default function CartPage() {
                   <div className="flex items-center space-x-4">
                     {/* Product Image */}
                     <div className="w-20 h-20 flex-shrink-0">
-                      <Image
-                        src={item.product.image}
-                        alt={item.product.name}
-                        width={80}
-                        height={80}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
+                      {item.product.thumbnail && item.product.thumbnail.trim() !== '' ? (
+                        <Image
+                          src={item.product.thumbnail}
+                          alt={item.product.name}
+                          width={80}
+                          height={80}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded-lg">
+                          <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
                     </div>
 
                     {/* Product Details */}
@@ -81,7 +89,7 @@ export default function CartPage() {
                       </p>
                       {item.product.weight && (
                         <p className="text-sm text-gray-600">
-                          {item.product.weight} {item.product.weightUnit}
+                          {item.product.weight}
                         </p>
                       )}
                     </div>
@@ -89,15 +97,11 @@ export default function CartPage() {
                     {/* Price */}
                     <div className="text-right">
                       <div className="text-lg font-semibold text-green-600">
-                        {formatPrice(
-                          item.product.discountPercent 
-                            ? item.product.price * (1 - item.product.discountPercent / 100)
-                            : item.product.price
-                        )}
+                        {formatPrice(item.product.price)}
                       </div>
-                      {item.product.discountPercent && (
+                      {item.product.original_price && item.product.is_on_sale && (
                         <div className="text-sm text-gray-500 line-through">
-                          {formatPrice(item.product.price)}
+                          {formatPrice(item.product.original_price)}
                         </div>
                       )}
                     </div>

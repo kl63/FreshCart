@@ -25,9 +25,7 @@ function SearchPageContent() {
     if (query) {
       const results = mockProducts.filter(product =>
         product.name.toLowerCase().includes(query.toLowerCase()) ||
-        product.description.toLowerCase().includes(query.toLowerCase()) ||
-        product.category.toLowerCase().includes(query.toLowerCase()) ||
-        (product.tags && product.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase())))
+        (product.description && product.description.toLowerCase().includes(query.toLowerCase()))
       )
       setSearchResults(results)
       setFilteredResults(results)
@@ -43,20 +41,19 @@ function SearchPageContent() {
     // Apply category filter
     if (selectedCategory !== 'all') {
       results = results.filter(product => 
-        product.category.toLowerCase().replace(/[^a-z0-9]/g, '-') === selectedCategory ||
-        (selectedCategory === 'organic' && product.isOrganic)
+        selectedCategory === 'organic' && product.is_organic
       )
     }
 
     // Apply other filters
     if (filters.inStock) {
-      results = results.filter(product => product.inStock)
+      results = results.filter(product => product.in_stock)
     }
     if (filters.onSale) {
-      results = results.filter(product => product.isOnSale)
+      results = results.filter(product => product.is_on_sale)
     }
     if (filters.organic) {
-      results = results.filter(product => product.isOrganic)
+      results = results.filter(product => product.is_organic)
     }
 
     // Apply price range filter
@@ -86,7 +83,7 @@ function SearchPageContent() {
         results.sort((a, b) => b.price - a.price)
         break
       case 'rating':
-        results.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        results.sort((a, b) => (b.rating_average || 0) - (a.rating_average || 0))
         break
       case 'newest':
         // For demo purposes, reverse the order

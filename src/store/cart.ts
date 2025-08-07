@@ -27,9 +27,7 @@ const FREE_DELIVERY_THRESHOLD = 35
 
 const calculateTotals = (items: CartItem[], discountAmount: number = 0): Omit<Cart, 'items' | 'discountCode' | 'discountAmount'> => {
   const subtotal = items.reduce((sum, item) => {
-    const price = item.product.discountPercent 
-      ? item.product.price * (1 - item.product.discountPercent / 100)
-      : item.product.price
+    const price = item.product.price
     return sum + (price * item.quantity)
   }, 0)
 
