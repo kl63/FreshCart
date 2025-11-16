@@ -75,7 +75,7 @@ export default function CartPage() {
       // IMPORTANT: Re-sync all cart items to backend before creating order
       // This ensures backend cart matches frontend, even if user left and came back
       console.log('🔄 Re-syncing cart to backend before order creation...')
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://fastapi.kevinlinportfolio.com/api/v1'
       
       const syncErrors: Array<{item: string; error: unknown}> = []
       for (const item of cart.items) {
