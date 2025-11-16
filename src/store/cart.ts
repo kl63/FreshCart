@@ -77,7 +77,7 @@ export const useCartStore = create<CartStore>()(
             const token = localStorage.getItem('token')
             if (token) {
               try {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://fastapi.kevinlinportfolio.com/api/v1'
                 const requestBody = {
                   product_id: product.id.toString(),  // Backend expects string, not int
                   quantity: quantity
