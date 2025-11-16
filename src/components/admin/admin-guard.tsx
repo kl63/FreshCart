@@ -20,8 +20,16 @@ export default function AdminGuard({ children, fallback }: AdminGuardProps) {
         // Clear any corrupted data first
         AuthService.clearCorruptedData()
         
-        // Check if user is authenticated and is admin
-        const canAccess = AuthService.canAccessAdmin()
+        // Check if user is authenticated
+        const isAuth = AuthService.isAuthenticated()
+        if (!isAuth) {
+          router.push('/auth/login?redirect=/admin')
+          return
+        }
+        
+        // Check if user is admin
+        const user = AuthService.getUser()
+        const canAccess = user?.is_admin === true
         
         if (!canAccess) {
           // Redirect to login if not authenticated
