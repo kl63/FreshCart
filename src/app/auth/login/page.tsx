@@ -48,12 +48,20 @@ export default function LoginPage() {
     console.log('=== SENDING LOGIN REQUEST ===')
     console.log('Login data:', loginData)
     
-    fetch('https://fastapi.kevinlinportfolio.com/api/v1/auth/login', {
+    // Use form-urlencoded format (required by FastAPI OAuth2)
+    const formBody = new URLSearchParams()
+    formBody.append('username', loginData.email) // FastAPI OAuth2 expects "username" field
+    formBody.append('password', loginData.password)
+    
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+    console.log('API URL:', apiUrl)
+    
+    fetch(`${apiUrl}/auth/token`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify(loginData)
+      body: formBody
     })
     .then(response => {
       console.log('=== LOGIN RESPONSE ===')
@@ -84,7 +92,8 @@ export default function LoginPage() {
       
       // Now fetch user data with the new token
       console.log('=== FETCHING USER DATA AFTER LOGIN ===')
-      return fetch('https://fastapi.kevinlinportfolio.com/api/v1/users/profile', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+      return fetch(`${apiUrl}/users/profile`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${data.access_token}`,

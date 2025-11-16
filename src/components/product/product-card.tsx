@@ -51,13 +51,14 @@ export default function ProductCard({ product, className }: ProductCardProps) {
         <div className="relative">
           {/* Product Image */}
           <div className="aspect-square overflow-hidden bg-gray-100">
-            {product.thumbnail && product.thumbnail.trim() !== '' ? (
+            {product.thumbnail && product.thumbnail.trim() !== '' && product.thumbnail.startsWith('http') ? (
               <Image
                 src={product.thumbnail}
                 alt={product.name}
                 width={300}
                 height={300}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                unoptimized
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
                   target.src = '/images/placeholder-product.jpg'

@@ -1,10 +1,44 @@
 'use client'
+import { useEffect, useState } from 'react'
 import ProductCard from '@/components/product/product-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { mockProducts, mockCategories } from '@/data/mock-products'
+import { mockCategories } from '@/data/mock-products'
+import { Product } from '@/types'
 
 export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('/api/products?page=1&limit=100')
+        if (response.ok) {
+          const data = await response.json()
+          setProducts(data)
+          console.log('✅ Loaded', data.length, 'products from backend')
+        }
+      } catch (error) {
+        console.error('Failed to load products:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -18,7 +52,7 @@ export default function ProductsPage() {
           </p>
           <div className="mt-6">
             <Badge variant="secondary" className="text-sm">
-              {mockProducts.length} products available
+              {products.length} products available
             </Badge>
           </div>
         </div>
@@ -75,7 +109,7 @@ export default function ProductsPage() {
 
         {/* Products Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {mockProducts.map((product) => (
+          {products.map((product: Product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>

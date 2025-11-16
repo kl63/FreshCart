@@ -11,6 +11,7 @@ interface CartStore {
   getItemCount: () => number
   applyDiscountCode: (code: string) => void
   removeDiscountCode: () => void
+  syncFromBackend: () => Promise<void>
 }
 
 const initialCart: Cart = {
@@ -70,6 +71,45 @@ export const useCartStore = create<CartStore>()(
           }
 
           const totals = calculateTotals(newItems, state.cart.discountAmount || 0)
+
+          // Sync with backend cart
+          const syncWithBackend = async () => {
+            const token = localStorage.getItem('token')
+            if (token) {
+              try {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+                const requestBody = {
+                  product_id: product.id.toString(),  // Backend expects string, not int
+                  quantity: quantity
+                }
+                console.log('🔄 Syncing cart item to backend:', requestBody)
+                
+                const response = await fetch(`${apiUrl}/cart/items`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(requestBody)
+                })
+                
+                if (!response.ok) {
+                  const errorText = await response.text()
+                  console.error('❌ Cart sync failed:', response.status, errorText)
+                  throw new Error(`Cart sync failed: ${response.status}`)
+                }
+                
+                const data = await response.json()
+                console.log('✅ Cart synced with backend:', product.name, data)
+              } catch (error) {
+                console.error('⚠️ Failed to sync cart with backend:', error)
+                // Don't fail the operation if backend sync fails
+              }
+            }
+          }
+          
+          // Fire and forget - don't wait for backend
+          syncWithBackend()
 
           return {
             cart: {
@@ -168,6 +208,75 @@ export const useCartStore = create<CartStore>()(
             }
           }
         })
+      },
+
+      syncFromBackend: async () => {
+        const token = localStorage.getItem('token')
+        if (!token) return
+
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+          console.log('🔄 Syncing cart from backend...')
+          
+          const response = await fetch(`${apiUrl}/cart`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          })
+
+          if (!response.ok) {
+            console.log('⚠️ Could not fetch backend cart:', response.status)
+            return
+          }
+
+          const backendCart = await response.json()
+          console.log('📦 Backend cart response:', backendCart)
+
+          // Backend returns array of cart items directly
+          const backendItems = Array.isArray(backendCart) ? backendCart : (backendCart.items || [])
+          
+          // If backend cart has items, sync to frontend
+          if (backendItems.length > 0) {
+            console.log('📦 Backend cart items:', backendItems)
+            
+            // Map backend cart items to frontend format
+            // Backend structure: { id, user_id, product_id, quantity, price_at_time, product: {...} }
+            const items: CartItem[] = backendItems
+              .filter((item: any) => item.product) // Only include items with valid products
+              .map((item: any) => ({
+                product: {
+                  ...item.product,
+                  // Ensure price is set
+                  price: item.product.price || item.price_at_time || 0
+                },
+                quantity: item.quantity
+              }))
+
+            if (items.length > 0) {
+              const totals = calculateTotals(items, 0)
+              
+              set({
+                cart: {
+                  items,
+                  ...totals,
+                }
+              })
+              
+              console.log('✅ Cart synced from backend:', items.length, 'items')
+            } else {
+              console.log('📭 Backend cart has items but no valid products')
+              // Clear frontend cart if backend has no valid products
+              set({ cart: initialCart })
+            }
+          } else {
+            console.log('📭 Backend cart is empty - keeping frontend cart (manual clear on success page)')
+            // Don't auto-clear frontend cart when backend is empty
+            // Cart will be cleared explicitly on payment success page
+            // This prevents clearing cart when backend empties but user has local items
+          }
+        } catch (error) {
+          console.error('⚠️ Failed to sync cart from backend:', error)
+        }
       },
     }),
     {

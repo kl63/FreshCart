@@ -12,8 +12,14 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [isClient, setIsClient] = useState(false)
   const { getItemCount } = useCartStore()
   const cartItemCount = getItemCount()
+
+  // Set isClient to true on component mount (client-side only)
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   useEffect(() => {
     async function loadCategories() {
@@ -98,7 +104,7 @@ export default function Header() {
             <Link href="/cart" className="relative flex items-center space-x-1 text-gray-600 hover:text-green-600">
               <ShoppingCartIcon className="h-6 w-6" />
               <span className="hidden sm:block text-sm">Cart</span>
-              {cartItemCount > 0 && (
+              {isClient && cartItemCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-green-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {cartItemCount}
                 </span>

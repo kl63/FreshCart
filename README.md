@@ -249,16 +249,30 @@ const nextConfig: NextConfig = {
 
 ## 🎯 Roadmap
 
-- [ ] User Authentication
-- [ ] Checkout Process
-- [ ] Payment Integration
-- [ ] Order Management
+- [x] User Authentication
+- [x] Checkout Process
+- [x] Payment Integration (Stripe)
+- [x] Order Management
+- [x] Backend API Integration
+- [x] Real-time Cart Sync
 - [ ] Admin Dashboard
-- [ ] Inventory Management
 - [ ] Customer Reviews
-- [ ] Search & Filters
+- [ ] Advanced Search & Filters
 - [ ] Delivery Tracking
 - [ ] Multi-language Support
+
+## 📚 Documentation
+
+Complete documentation is available in the **[docs/](./docs/)** folder:
+
+- **[Setup Guide](./docs/setup/)** - Getting started and backend setup
+- **[Stripe Integration](./docs/stripe/)** - Payment processing setup
+- **[Cart & Checkout](./docs/cart-checkout/)** - Shopping cart implementation
+- **[Authentication](./docs/auth/)** - User login and auth
+- **[API Reference](./docs/api/)** - Backend API documentation
+- **[Troubleshooting](./docs/debug/)** - Common issues and fixes
+
+**Quick Start**: See [docs/setup/QUICK_START.md](./docs/setup/QUICK_START.md)
 
 ## 🤝 Contributing
 

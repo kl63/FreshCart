@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { TrashIcon, PlusIcon, MinusIcon } from '@heroicons/react/24/outline'
@@ -10,13 +11,243 @@ import { useCartStore } from '@/store/cart'
 import { formatPrice } from '@/lib/utils'
 
 export default function CartPage() {
+  const router = useRouter()
   const { cart, updateQuantity, removeItem, applyDiscountCode, removeDiscountCode } = useCartStore()
   const [discountCode, setDiscountCode] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleApplyDiscount = () => {
     if (discountCode.trim()) {
       applyDiscountCode(discountCode.trim())
       setDiscountCode('')
+    }
+  }
+
+  // NEW CHECKOUT FLOW: Create order first, then redirect to checkout
+  const handleCheckout = async () => {
+    if (loading) return
+    
+    setLoading(true)
+    setError('')
+
+    try {
+      // Check authentication
+      const token = localStorage.getItem('token')
+      
+      if (!token) {
+        setError('Please log in to continue checkout')
+        router.push('/auth/login?redirect=/cart')
+        return
+      }
+
+      // Validate user data exists
+      const userStr = localStorage.getItem('user')
+      if (!userStr) {
+        setError('Session expired. Please log in again.')
+        localStorage.removeItem('token') // Clear invalid token
+        router.push('/auth/login?redirect=/cart')
+        return
+      }
+
+      // Parse user data
+      let user
+      try {
+        user = JSON.parse(userStr)
+        console.log('User authenticated:', user.email || user.username)
+      } catch {
+        setError('Invalid session. Please log in again.')
+        localStorage.clear()
+        router.push('/auth/login?redirect=/cart')
+        return
+      }
+
+      // Validate cart
+      if (!cart.items || cart.items.length === 0) {
+        setError('Your cart is empty')
+        setLoading(false)
+        return
+      }
+
+      console.log('Creating order with', cart.items.length, 'items')
+      console.log('Auth token:', token.substring(0, 20) + '...')
+
+      // IMPORTANT: Re-sync all cart items to backend before creating order
+      // This ensures backend cart matches frontend, even if user left and came back
+      console.log('🔄 Re-syncing cart to backend before order creation...')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+      
+      const syncErrors: Array<{item: string; error: unknown}> = []
+      for (const item of cart.items) {
+        try {
+          const syncResponse = await fetch(`${apiUrl}/cart/items`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              product_id: item.product.id,
+              quantity: item.quantity
+            })
+          })
+          
+          if (!syncResponse.ok) {
+            const errorText = await syncResponse.text()
+            console.error('❌ Failed to sync item:', item.product.name)
+            console.error('   Status:', syncResponse.status)
+            console.error('   Error:', errorText)
+            syncErrors.push({ item: item.product.name, error: errorText })
+          } else {
+            console.log('✅ Synced:', item.product.name)
+          }
+        } catch (syncError) {
+          console.error('❌ Network error syncing item:', item.product.name, syncError)
+          syncErrors.push({ item: item.product.name, error: syncError })
+        }
+      }
+      
+      if (syncErrors.length > 0) {
+        console.error('❌ Cart sync failed for', syncErrors.length, 'item(s)')
+        setError(`Failed to sync cart items: ${syncErrors.map(e => e.item).join(', ')}. Please try again.`)
+        setLoading(false)
+        return
+      }
+      
+      console.log('✅ Cart re-sync complete!')
+
+      // Fetch user's addresses to get shipping_address_id
+      console.log('📍 Fetching user addresses...')
+      const addressResponse = await fetch(`${apiUrl}/addresses/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      })
+
+      if (!addressResponse.ok) {
+        throw new Error('Failed to fetch addresses. Please add a shipping address.')
+      }
+
+      const addresses = await addressResponse.json()
+      console.log('📍 Found addresses:', addresses.length)
+
+      if (!addresses || addresses.length === 0) {
+        throw new Error('No shipping address found. Please add a shipping address first.')
+      }
+
+      // Use default address or first address
+      const defaultAddress = addresses.find((addr: { is_default?: boolean }) => addr.is_default) || addresses[0]
+      console.log('📍 Using address:', defaultAddress.id)
+
+      const orderUrl = `${apiUrl}/orders/`
+      console.log('Order creation URL:', orderUrl)
+
+      // Backend reads items from cart database, and needs shipping_address_id
+      const orderData = {
+        shipping_address_id: defaultAddress.id,
+        notes: "Order created from cart"
+      }
+      
+      console.log('Cart has', cart.items.length, 'items')
+      console.log('Order request body:', JSON.stringify(orderData, null, 2))
+
+      // Create order
+      const response = await fetch(orderUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData)
+        }
+      )
+
+      console.log('Order creation response status:', response.status)
+      console.log('Order creation response ok:', response.ok)
+      console.log('Order creation response headers:', Object.fromEntries(response.headers.entries()))
+
+      if (!response.ok) {
+        // Try to get response text first
+        const responseText = await response.text()
+        console.error('Order creation failed - Response text:', responseText)
+        
+        interface ErrorResponse {
+          detail?: string | Array<{loc?: string[]; msg?: string; type?: string}>;
+          message?: string;
+        }
+        
+        let errorData: ErrorResponse = {}
+        try {
+          errorData = responseText ? JSON.parse(responseText) : {}
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError)
+          errorData = { detail: responseText || 'Unknown error' }
+        }
+        
+        console.error('Order creation failed - Parsed error:', errorData)
+        
+        // Handle specific error cases
+        if (response.status === 401) {
+          throw new Error('Session expired. Please log in again.')
+        } else if (response.status === 404) {
+          const detailStr = typeof errorData.detail === 'string' ? errorData.detail : ''
+          if (detailStr.includes('User not found')) {
+            throw new Error('User account not found. Please log in again.')
+          } else {
+            throw new Error(`Endpoint not found. Backend may not have this endpoint. Status: ${response.status}`)
+          }
+        } else if (response.status === 422) {
+          // Validation error - show detailed info
+          const validationErrors = errorData.detail || []
+          if (Array.isArray(validationErrors)) {
+            const errorMessages = validationErrors.map((err) => 
+              `${err.loc?.join('.') || 'field'}: ${err.msg || 'validation error'}`
+            ).join(', ')
+            throw new Error(`Validation error: ${errorMessages}`)
+          } else {
+            throw new Error(`Validation error: ${errorData.detail || 'Invalid request data'}`)
+          }
+        } else {
+          const detailStr = typeof errorData.detail === 'string' ? errorData.detail : ''
+          throw new Error(
+            detailStr || 
+            errorData.message || 
+            responseText ||
+            `Failed to create order (HTTP ${response.status})`
+          )
+        }
+      }
+
+      const order = await response.json()
+      console.log('Order created successfully:', order.id)
+
+      if (!order.id) {
+        throw new Error('Invalid order response from server')
+      }
+
+      // Redirect to NEW checkout page with order ID
+      router.push(`/checkout/${order.id}`)
+      
+    } catch (err) {
+      console.error('Checkout error:', err)
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred. Please try again.'
+      
+      // If authentication error, clear session and redirect to login
+      if (errorMessage.includes('Session expired') || 
+          errorMessage.includes('User not found') ||
+          errorMessage.includes('User account not found')) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        setError(errorMessage + ' Redirecting to login...')
+        setTimeout(() => {
+          router.push('/auth/login?redirect=/cart')
+        }, 2000)
+      } else {
+        setError(errorMessage)
+      }
+      
+      setLoading(false)
     }
   }
 
@@ -59,13 +290,14 @@ export default function CartPage() {
                   <div className="flex items-center space-x-4">
                     {/* Product Image */}
                     <div className="w-20 h-20 flex-shrink-0">
-                      {item.product.thumbnail && item.product.thumbnail.trim() !== '' ? (
+                      {item.product.thumbnail && item.product.thumbnail.trim() !== '' && item.product.thumbnail.startsWith('http') ? (
                         <Image
                           src={item.product.thumbnail}
                           alt={item.product.name}
                           width={80}
                           height={80}
                           className="w-full h-full object-cover rounded-lg"
+                          unoptimized
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gray-200 rounded-lg">
@@ -219,13 +451,55 @@ export default function CartPage() {
                   </div>
                 )}
 
-                {/* Checkout Button */}
+                {/* Error Message */}
+                {error && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-700">{error}</p>
+                    <button
+                      onClick={() => setError('')}
+                      className="text-xs text-red-600 underline mt-1"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                )}
+
+                {/* Checkout Button - NEW FLOW */}
                 <Button 
                   size="lg" 
-                  className="w-full mt-6 bg-green-600 hover:bg-green-700"
+                  className="w-full mt-6 bg-green-600 hover:bg-green-700 disabled:bg-gray-400"
+                  onClick={handleCheckout}
+                  disabled={loading}
                 >
-                  Proceed to Checkout
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                      </svg>
+                      Creating Order...
+                    </span>
+                  ) : (
+                    'Proceed to Checkout'
+                  )}
                 </Button>
+
+                {/* Security Badge */}
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  🔒 Secure checkout powered by Stripe
+                </p>
 
                 {/* Continue Shopping */}
                 <Button 

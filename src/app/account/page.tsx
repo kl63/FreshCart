@@ -147,8 +147,15 @@ export default function AccountPage() {
     }
   }
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
+  const getInitials = (firstName: string | null | undefined, lastName: string | null | undefined) => {
+    const firstInitial = firstName && firstName.length > 0 ? firstName.charAt(0) : '';
+    const lastInitial = lastName && lastName.length > 0 ? lastName.charAt(0) : '';
+    
+    if (!firstInitial && !lastInitial) {
+      return 'U'; // Default to 'U' for User if no initials available
+    }
+    
+    return `${firstInitial}${lastInitial}`.toUpperCase();
   }
 
   if (isLoading) {

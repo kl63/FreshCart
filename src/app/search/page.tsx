@@ -5,35 +5,60 @@ import { useSearchParams } from 'next/navigation'
 import ProductCard from '@/components/product/product-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { mockProducts, mockCategories } from '@/data/mock-products'
+import { mockCategories } from '@/data/mock-products'
+import { Product } from '@/types'
 
 function SearchPageContent() {
   const searchParams = useSearchParams()
   const query = searchParams.get('q') || ''
-  const [searchResults, setSearchResults] = useState(mockProducts)
-  const [filteredResults, setFilteredResults] = useState(mockProducts)
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [searchResults, setSearchResults] = useState<Product[]>([])
+  const [filteredResults, setFilteredResults] = useState<Product[]>([])
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [sortBy, setSortBy] = useState('relevance')
+  const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({
-    inStock: false,
-    onSale: false,
     organic: false,
-    priceRange: 'all'
+    onSale: false,
+    inStock: false,
+    priceRange: 'all',
   })
 
+  // Fetch all products on mount
   useEffect(() => {
-    if (query) {
-      const results = mockProducts.filter(product =>
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('/api/products?page=1&limit=100')
+        if (response.ok) {
+          const products = await response.json()
+          setAllProducts(products)
+          setSearchResults(products)
+          setFilteredResults(products)
+          console.log('✅ Loaded', products.length, 'products for search')
+        }
+      } catch (error) {
+        console.error('Failed to load products:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [])
+
+  // Filter by search query
+  useEffect(() => {
+    if (query && allProducts.length > 0) {
+      const results = allProducts.filter(product =>
         product.name.toLowerCase().includes(query.toLowerCase()) ||
         (product.description && product.description.toLowerCase().includes(query.toLowerCase()))
       )
       setSearchResults(results)
       setFilteredResults(results)
     } else {
-      setSearchResults(mockProducts)
-      setFilteredResults(mockProducts)
+      setSearchResults(allProducts)
+      setFilteredResults(allProducts)
     }
-  }, [query])
+  }, [query, allProducts])
 
   useEffect(() => {
     let results = [...searchResults]
@@ -269,7 +294,20 @@ function SearchPageContent() {
             </div>
 
             {/* Products Grid */}
-            {filteredResults.length > 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div key={index} className="bg-white rounded-lg shadow overflow-hidden animate-pulse">
+                    <div className="aspect-square bg-gray-200" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-gray-200 rounded" />
+                      <div className="h-4 bg-gray-200 rounded w-3/4" />
+                      <div className="h-6 bg-gray-200 rounded w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredResults.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredResults.map((product) => (
                   <ProductCard key={product.id} product={product} />

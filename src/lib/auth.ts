@@ -37,6 +37,34 @@ export interface LoginData {
 
 const API_BASE_URL = 'https://fastapi.kevinlinportfolio.com/api/v1'
 
+/**
+ * Get authentication token - unified function for all API calls
+ */
+export const getAuthToken = (): string => {
+  // First check sessionStorage for test token
+  if (typeof window !== 'undefined') {
+    // First try to get a test token if one exists
+    const testToken = sessionStorage.getItem('test_token');
+    if (testToken) {
+      console.log('Using test token from sessionStorage');
+      return testToken;
+    }
+
+    // Otherwise get the real auth token
+    const token = localStorage.getItem('token');
+    if (token) {
+      return token;
+    }
+
+    // Fallback to dev auth token if environment allows it
+    if (process.env.NEXT_PUBLIC_DEV_AUTH_TOKEN) {
+      return process.env.NEXT_PUBLIC_DEV_AUTH_TOKEN;
+    }
+  }
+  
+  return '';
+};
+
 export class AuthService {
   static async login(data: LoginData): Promise<LoginResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {

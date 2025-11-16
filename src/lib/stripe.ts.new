@@ -1,0 +1,57 @@
+// This is a temporary file to demonstrate the correct implementation
+// Helper function to extract error messages from API responses
+const extractErrorMessage = async (response: Response): Promise<string> => {
+  const errorMessage = 'An error occurred';
+  let responseText: string;
+  
+  try {
+    responseText = await response.text();
+  } catch (e) {
+    console.error('Failed to get response text:', e);
+    return errorMessage;
+  }
+  
+  if (!responseText) {
+    return `HTTP Error ${response.status}: ${response.statusText}`;
+  }
+  
+  let errorData: Record<string, unknown> = {};
+  
+  try {
+    errorData = JSON.parse(responseText);
+  } catch {
+    // If parsing fails, use responseText as fallback
+    return responseText || errorMessage;
+  }
+  
+  if (!errorData || typeof errorData !== 'object') {
+    return responseText || errorMessage;
+  }
+  
+  const errorObj = errorData as ErrorDetail;
+  
+  if (errorObj.detail) {
+    if (Array.isArray(errorObj.detail)) {
+      return errorObj.detail.map((err: FastApiError) => 
+        typeof err === 'object' ? `${err.loc?.join('.')} - ${err.msg}` : String(err)
+      ).join(', ');
+    } 
+    return String(errorObj.detail);
+  } 
+  
+  if (errorObj.message) {
+    return String(errorObj.message);
+  }
+  
+  return responseText || errorMessage;
+};
+
+// Additionally, any code that calls extractErrorMessage should use this pattern:
+// Instead of:
+// const errorMessage = `HTTP ${response.status}: ${extractErrorMessage(responseText)}`;
+//
+// It should be:
+// Create a new clone of the response before extracting the error message
+// since response.text() can only be called once
+// const errorResponse = response.clone();
+// const errorMessage = `HTTP ${response.status}: ${await extractErrorMessage(errorResponse)}`;
