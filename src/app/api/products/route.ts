@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // Support both local and production APIs
 const PRODUCTION_API = 'https://fastapi.kevinlinportfolio.com/api/v1'
-const LOCAL_API = 'http://localhost:8000/api/v1'
 
-// Use environment variable or default to local for development
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || LOCAL_API
+// Use environment variable or default to production
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || PRODUCTION_API
 
 export async function GET(request: NextRequest) {
   try {

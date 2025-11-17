@@ -215,7 +215,7 @@ export const useCartStore = create<CartStore>()(
         if (!token) return
 
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://fastapi.kevinlinportfolio.com/api/v1'
           console.log('🔄 Syncing cart from backend...')
           
           const response = await fetch(`${apiUrl}/cart`, {

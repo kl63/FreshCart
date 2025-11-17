@@ -34,7 +34,7 @@ export default function PaymentSuccessPage() {
         const token = localStorage.getItem('token');
         
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/orders/${orderId}`,
+          `${process.env.NEXT_PUBLIC_API_URL || 'https://fastapi.kevinlinportfolio.com/api/v1'}/orders/${orderId}`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,

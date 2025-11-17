@@ -53,7 +53,7 @@ export default function LoginPage() {
     formBody.append('username', loginData.email) // FastAPI OAuth2 expects "username" field
     formBody.append('password', loginData.password)
     
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://fastapi.kevinlinportfolio.com/api/v1'
     console.log('API URL:', apiUrl)
     
     fetch(`${apiUrl}/auth/token`, {
@@ -92,7 +92,7 @@ export default function LoginPage() {
       
       // Now fetch user data with the new token
       console.log('=== FETCHING USER DATA AFTER LOGIN ===')
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://fastapi.kevinlinportfolio.com/api/v1'
       return fetch(`${apiUrl}/users/profile`, {
         method: 'GET',
         headers: {

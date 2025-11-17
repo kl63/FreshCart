@@ -7,7 +7,6 @@ export const stripePromise = loadStripe(
 
 // API Configuration
 const PRODUCTION_API = 'https://fastapi.kevinlinportfolio.com/api/v1';
-const LOCAL_API = 'http://localhost:8000/api/v1';
 
 // API base URL - use environment variable or production by default
 let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || PRODUCTION_API;
@@ -58,44 +57,30 @@ export const checkAndSelectBestAPI = async (): Promise<string> => {
     return envUrl;
   }
   
-  // If forced to specific mode, use the specified API without checking
-  if (FORCE_API === 'local') {
-    console.log(' FORCED: Using local API without health check');
-    API_BASE_URL = LOCAL_API;
-    return LOCAL_API;
-  } else if (FORCE_API === 'production') {
-    console.log(' FORCED: Using production API without health check');
+  // If forced to production mode, use the specified API without checking
+  if (FORCE_API === 'production') {
+    console.log('🔒 FORCED: Using production API without health check');
     API_BASE_URL = PRODUCTION_API;
     return PRODUCTION_API;
   }
 
-  console.log(' Checking API availability...');
+  console.log('🔄 Checking API availability...');
   
-  // First check if local API is available (preferred for development)
-  const isLocalAvailable = await checkApiAvailability(LOCAL_API);
-  
-  if (isLocalAvailable) {
-    console.log(' Local API is available. Using local API.');
-    API_BASE_URL = LOCAL_API;
-    return LOCAL_API;
-  }
-  
-  // If local is not available, try production
-  console.log(' Local API not available, checking production API...');
+  // Check if production API is available
   const isProductionAvailable = await checkApiAvailability(PRODUCTION_API);
   
   if (isProductionAvailable) {
-    console.log(' Production API is available. Using production API.');
+    console.log('✅ Production API is available. Using production API.');
     API_BASE_URL = PRODUCTION_API;
     return PRODUCTION_API;
   }
   
-  // Neither is available, default to local for clearer error messages
-  console.warn(' WARNING: Neither local nor production API is available!');
-  console.warn(' Using local API URL but expect connection errors.');
-  console.warn(' TIP: Start your FastAPI server or check network connectivity.');
-  API_BASE_URL = LOCAL_API;
-  return LOCAL_API;
+  // Production is not available, show warning and use it anyway
+  console.warn('⚠️ WARNING: Production API is not responding!');
+  console.warn('⚠️ Using production API URL but expect connection errors.');
+  console.warn('💡 TIP: Check network connectivity or backend server status.');
+  API_BASE_URL = PRODUCTION_API;
+  return PRODUCTION_API;
 };
 
 // Initialize API selection
