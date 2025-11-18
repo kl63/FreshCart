@@ -39,6 +39,21 @@ export default function AccountPage() {
   const [isUpdating, setIsUpdating] = useState(false)
   const [updateError, setUpdateError] = useState('')
   const [updateSuccess, setUpdateSuccess] = useState('')
+  const [showAddressForm, setShowAddressForm] = useState(false)
+  const [isAddingAddress, setIsAddingAddress] = useState(false)
+  const [addressError, setAddressError] = useState('')
+  const [addressFormData, setAddressFormData] = useState({
+    type: 'shipping',
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    street: '',
+    city: '',
+    state: '',
+    zip_code: '',
+    country: 'USA'
+  })
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -170,6 +185,65 @@ export default function AccountPage() {
     router.push('/')
   }
 
+  const handleAddressInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setAddressFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    
+    if (addressError) setAddressError('')
+  }
+
+  const handleAddAddress = async () => {
+    setIsAddingAddress(true)
+    setAddressError('')
+    
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        setAddressError('No authentication token found')
+        return
+      }
+      
+      const response = await fetch('https://fastapi.kevinlinportfolio.com/api/v1/addresses/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(addressFormData)
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.detail || 'Failed to add address')
+      }
+      
+      const newAddress = await response.json()
+      setAddresses([...addresses, newAddress])
+      setShowAddressForm(false)
+      setAddressFormData({
+        type: 'shipping',
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        street: '',
+        city: '',
+        state: '',
+        zip_code: '',
+        country: 'USA'
+      })
+      
+    } catch (error) {
+      console.error('Address creation error:', error)
+      setAddressError(error instanceof Error ? error.message : 'Failed to add address')
+    } finally {
+      setIsAddingAddress(false)
+    }
+  }
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -291,9 +365,6 @@ export default function AccountPage() {
                 </Button>
                 <Button variant="ghost" className="w-full justify-start">
                   Addresses
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/wishlist')}>
-                  Wishlist
                 </Button>
                 <Button 
                   variant="ghost" 
@@ -533,44 +604,224 @@ export default function AccountPage() {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
                     <p className="mt-2 text-gray-600">Loading addresses...</p>
                   </div>
-                ) : addresses.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-600">No saved addresses</p>
-                    <Button variant="outline" className="mt-4">
-                      Add Address
-                    </Button>
-                  </div>
                 ) : (
                   <>
-                    <div className="space-y-4">
-                      {addresses.map((address) => (
-                        <div key={address.id} className="p-4 border border-gray-200 rounded-lg">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <div className="flex items-center gap-2 mb-2">
-                                <p className="font-semibold">{address.type.charAt(0).toUpperCase() + address.type.slice(1)} Address</p>
-                                {address.is_default && (
-                                  <Badge variant="secondary">Default</Badge>
-                                )}
-                              </div>
-                              <p className="text-sm text-gray-900">{address.first_name} {address.last_name}</p>
-                              <p className="text-sm text-gray-600">{address.street}</p>
-                              <p className="text-sm text-gray-600">
-                                {address.city}, {address.state} {address.zip_code}
-                              </p>
-                              <p className="text-sm text-gray-600">{address.country}</p>
-                            </div>
-                            <Button variant="outline" size="sm">
-                              Edit
-                            </Button>
+                    {/* Address Form */}
+                    {showAddressForm && (
+                      <div className="mb-6 p-4 border border-green-200 rounded-lg bg-green-50">
+                        <h3 className="font-semibold mb-4">Add New Address</h3>
+                        
+                        {addressError && (
+                          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+                            {addressError}
+                          </div>
+                        )}
+                        
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Address Type
+                            </label>
+                            <select
+                              name="type"
+                              value={addressFormData.type}
+                              onChange={handleAddressInputChange}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            >
+                              <option value="shipping">Shipping</option>
+                              <option value="billing">Billing</option>
+                            </select>
+                          </div>
+                          <div></div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              First Name
+                            </label>
+                            <input
+                              type="text"
+                              name="first_name"
+                              value={addressFormData.first_name}
+                              onChange={handleAddressInputChange}
+                              required
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Last Name
+                            </label>
+                            <input
+                              type="text"
+                              name="last_name"
+                              value={addressFormData.last_name}
+                              onChange={handleAddressInputChange}
+                              required
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Email
+                            </label>
+                            <input
+                              type="email"
+                              name="email"
+                              value={addressFormData.email}
+                              onChange={handleAddressInputChange}
+                              required
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Phone
+                            </label>
+                            <input
+                              type="tel"
+                              name="phone"
+                              value={addressFormData.phone}
+                              onChange={handleAddressInputChange}
+                              required
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            />
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Street Address
+                            </label>
+                            <input
+                              type="text"
+                              name="street"
+                              value={addressFormData.street}
+                              onChange={handleAddressInputChange}
+                              required
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              City
+                            </label>
+                            <input
+                              type="text"
+                              name="city"
+                              value={addressFormData.city}
+                              onChange={handleAddressInputChange}
+                              required
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              State
+                            </label>
+                            <input
+                              type="text"
+                              name="state"
+                              value={addressFormData.state}
+                              onChange={handleAddressInputChange}
+                              required
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              ZIP Code
+                            </label>
+                            <input
+                              type="text"
+                              name="zip_code"
+                              value={addressFormData.zip_code}
+                              onChange={handleAddressInputChange}
+                              required
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Country
+                            </label>
+                            <input
+                              type="text"
+                              name="country"
+                              value={addressFormData.country}
+                              onChange={handleAddressInputChange}
+                              required
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            />
                           </div>
                         </div>
-                      ))}
-                    </div>
+                        
+                        <div className="flex gap-2 mt-4">
+                          <Button 
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={handleAddAddress}
+                            disabled={isAddingAddress}
+                          >
+                            {isAddingAddress ? 'Adding...' : 'Add Address'}
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            onClick={() => setShowAddressForm(false)}
+                            disabled={isAddingAddress}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                     
-                    <Button variant="outline" className="w-full mt-4">
-                      Add New Address
-                    </Button>
+                    {/* Existing Addresses */}
+                    {addresses.length === 0 && !showAddressForm ? (
+                      <div className="text-center py-8">
+                        <p className="text-gray-600">No saved addresses</p>
+                        <Button 
+                          variant="outline" 
+                          className="mt-4"
+                          onClick={() => setShowAddressForm(true)}
+                        >
+                          Add Address
+                        </Button>
+                      </div>
+                    ) : addresses.length > 0 ? (
+                      <>
+                        <div className="space-y-4">
+                          {addresses.map((address) => (
+                            <div key={address.id} className="p-4 border border-gray-200 rounded-lg">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <p className="font-semibold">{address.type.charAt(0).toUpperCase() + address.type.slice(1)} Address</p>
+                                    {address.is_default && (
+                                      <Badge variant="secondary">Default</Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-gray-900">{address.first_name} {address.last_name}</p>
+                                  <p className="text-sm text-gray-600">{address.street}</p>
+                                  <p className="text-sm text-gray-600">
+                                    {address.city}, {address.state} {address.zip_code}
+                                  </p>
+                                  <p className="text-sm text-gray-600">{address.country}</p>
+                                </div>
+                                <Button variant="outline" size="sm">
+                                  Edit
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {!showAddressForm && (
+                          <Button 
+                            variant="outline" 
+                            className="w-full mt-4"
+                            onClick={() => setShowAddressForm(true)}
+                          >
+                            Add New Address
+                          </Button>
+                        )}
+                      </>
+                    ) : null}
                   </>
                 )}
               </CardContent>
@@ -594,10 +845,10 @@ export default function AccountPage() {
                   <Button 
                     variant="outline" 
                     className="h-auto p-4 flex flex-col items-center"
-                    onClick={() => router.push('/wishlist')}
+                    onClick={() => router.push('/orders')}
                   >
-                    <div className="text-2xl mb-2">❤️</div>
-                    <span>My Wishlist</span>
+                    <div className="text-2xl mb-2">📦</div>
+                    <span>My Orders</span>
                   </Button>
                   <Button 
                     variant="outline" 
