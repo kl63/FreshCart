@@ -54,7 +54,8 @@ export default function AdminProducts() {
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory
+    const categoryName = typeof product.category === 'object' ? product.category?.name : product.category
+    const matchesCategory = selectedCategory === 'all' || categoryName === selectedCategory
     return matchesSearch && matchesCategory
   })
 
@@ -474,7 +475,9 @@ export default function AdminProducts() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                          {product.category || 'Uncategorized'}
+                          {typeof product.category === 'object' 
+                            ? product.category?.name || 'Uncategorized'
+                            : product.category || 'Uncategorized'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

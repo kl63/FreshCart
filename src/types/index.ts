@@ -14,7 +14,7 @@ export interface Product {
   // Optional fields for detailed product view
   description?: string
   images?: string[]
-  category?: string
+  category?: string | { id: string; name: string; slug: string; icon?: string }
   category_id?: string
   subcategory?: string
   brand?: string
