@@ -79,7 +79,7 @@ export default function WishlistPage() {
     setWishlistItems(prev => prev.filter(item => item.id !== itemId))
   }
 
-  const addToCart = (item: typeof mockWishlistItems[0]) => {
+  const addToCart = (item: WishlistItem) => {
     // Convert wishlist item to Product type for cart
     const product = {
       id: item.id,
@@ -88,15 +88,13 @@ export default function WishlistPage() {
       original_price: item.originalPrice || null,
       thumbnail: item.image,
       in_stock: item.inStock,
-      is_on_sale: item.isOnSale,
+      is_on_sale: item.isOnSale || false,
       rating_average: item.rating,
-      unit: item.unit,
       slug: item.name.toLowerCase().replace(/\s+/g, '-'),
       description: '',
       is_organic: false,
       is_featured: false,
       stock_quantity: 100,
-      weight: 1,
       rating_count: 0,
       discount_percentage: 0
     }
