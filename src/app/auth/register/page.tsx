@@ -61,6 +61,7 @@ export default function RegisterPage() {
       
       const registerData: RegisterData = {
         email: submitData.email,
+        username: submitData.email,  // Use email as username
         password: submitData.password,
         first_name: submitData.first_name,
         last_name: submitData.last_name,
