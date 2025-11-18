@@ -24,11 +24,10 @@ export interface LoginResponse {
 
 export interface RegisterData {
   email: string
-  username: string
   password: string
   first_name: string
   last_name: string
-  phone: string
+  phone?: string  // Optional as per backend schema
 }
 
 export interface LoginData {

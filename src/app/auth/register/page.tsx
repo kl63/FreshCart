@@ -10,7 +10,6 @@ import { AuthService, type RegisterData } from '@/lib/auth'
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     email: '',
-    username: '',
     password: '',
     confirmPassword: '',
     first_name: '',
@@ -62,11 +61,10 @@ export default function RegisterPage() {
       
       const registerData: RegisterData = {
         email: submitData.email,
-        username: submitData.username,
         password: submitData.password,
         first_name: submitData.first_name,
         last_name: submitData.last_name,
-        phone: submitData.phone
+        phone: submitData.phone || undefined  // Send undefined if empty
       }
       
       await AuthService.register(registerData)
@@ -174,27 +172,8 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Username
-              </label>
-              <div className="mt-1">
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  autoComplete="username"
-                  required
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                  placeholder="Choose a username"
-                />
-              </div>
-            </div>
-
-            <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                Phone number
+                Phone number (optional)
               </label>
               <div className="mt-1">
                 <input
@@ -202,7 +181,6 @@ export default function RegisterPage() {
                   name="phone"
                   type="tel"
                   autoComplete="tel"
-                  required
                   value={formData.phone}
                   onChange={handleInputChange}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
