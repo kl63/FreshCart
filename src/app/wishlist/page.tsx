@@ -8,8 +8,21 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useCartStore } from '@/store/cart'
 
+interface WishlistItem {
+  id: string
+  name: string
+  price: number
+  originalPrice?: number
+  image: string
+  category: string | { id: string; name: string; slug: string; icon?: string }
+  inStock: boolean
+  isOnSale?: boolean
+  rating: number
+  unit?: string
+}
+
 // Mock wishlist data
-const mockWishlistItems = [
+const mockWishlistItems: WishlistItem[] = [
   {
     id: '1',
     name: 'Organic Avocados',
