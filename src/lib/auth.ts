@@ -84,6 +84,8 @@ export class AuthService {
   }
 
   static async register(data: RegisterData): Promise<{ message: string }> {
+    console.log('🔵 Registration attempt with data:', JSON.stringify(data, null, 2))
+    
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: {
@@ -92,12 +94,27 @@ export class AuthService {
       body: JSON.stringify(data),
     })
 
+    console.log('🔵 Registration response status:', response.status)
+
     if (!response.ok) {
       const error = await response.json()
+      console.error('❌ Registration error details:', JSON.stringify(error, null, 2))
+      
+      // Try to extract detailed validation errors
+      if (error.detail && Array.isArray(error.detail)) {
+        const errorMessages = error.detail.map((err: any) => {
+          const field = err.loc ? err.loc.join('.') : 'unknown'
+          return `${field}: ${err.msg}`
+        }).join(', ')
+        throw new Error(`Validation failed: ${errorMessages}`)
+      }
+      
       throw new Error(error.detail || 'Registration failed')
     }
 
-    return response.json()
+    const result = await response.json()
+    console.log('✅ Registration successful:', result)
+    return result
   }
 
   static async refreshToken(refreshToken: string): Promise<LoginResponse> {
