@@ -59,9 +59,12 @@ export default function RegisterPage() {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { confirmPassword, ...submitData } = formData // confirmPassword used for validation only
       
+      // Create alphanumeric username from email (remove @ and . and everything after @)
+      const username = submitData.email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '')
+      
       const registerData: RegisterData = {
         email: submitData.email,
-        username: submitData.email,  // Use email as username
+        username: username,  // Alphanumeric username from email
         password: submitData.password,
         first_name: submitData.first_name,
         last_name: submitData.last_name,
