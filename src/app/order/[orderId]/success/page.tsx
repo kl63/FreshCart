@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCartStore } from '@/store/cart';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 interface Order {
   id: string;
@@ -15,6 +16,7 @@ interface Order {
 export default function PaymentSuccessPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const orderId = params.orderId as string;
   const { clearCart } = useCartStore();
   
@@ -67,6 +69,15 @@ export default function PaymentSuccessPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-2xl mx-auto">
+        {/* Back Button */}
+        <button
+          onClick={() => router.push('/account')}
+          className="mb-4 flex items-center text-gray-600 hover:text-gray-900 transition"
+        >
+          <ArrowLeftIcon className="h-4 w-4 mr-2" />
+          Back to Account
+        </button>
+
         {/* Success Card */}
         <div className="bg-white rounded-lg shadow-lg p-8 text-center">
           {/* Success Icon */}
