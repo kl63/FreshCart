@@ -42,6 +42,7 @@ export default function AccountPage() {
   const [showAddressForm, setShowAddressForm] = useState(false)
   const [isAddingAddress, setIsAddingAddress] = useState(false)
   const [addressError, setAddressError] = useState('')
+  const [activeSection, setActiveSection] = useState('profile') // 'profile', 'orders', 'addresses'
   const [addressFormData, setAddressFormData] = useState({
     type: 'shipping',
     first_name: '',
@@ -357,15 +358,65 @@ export default function AccountPage() {
                 <CardTitle>Account Menu</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start">
+                <Button 
+                  variant="ghost" 
+                  className={`w-full justify-start ${activeSection === 'profile' ? 'bg-green-50 text-green-600' : ''}`}
+                  onClick={() => setActiveSection('profile')}
+                >
                   Profile Information
                 </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/orders')}>
+                <Button 
+                  variant="ghost" 
+                  className={`w-full justify-start ${activeSection === 'orders' ? 'bg-green-50 text-green-600' : ''}`}
+                  onClick={() => setActiveSection('orders')}
+                >
                   Order History
                 </Button>
-                <Button variant="ghost" className="w-full justify-start">
+                <Button 
+                  variant="ghost" 
+                  className={`w-full justify-start ${activeSection === 'addresses' ? 'bg-green-50 text-green-600' : ''}`}
+                  onClick={() => setActiveSection('addresses')}
+                >
                   Addresses
                 </Button>
+                
+                {/* Admin Menu Items */}
+                {user?.is_admin && (
+                  <>
+                    <div className="pt-4 pb-2 border-t border-gray-200">
+                      <p className="text-xs font-semibold text-gray-500 px-3">ADMIN</p>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start"
+                      onClick={() => router.push('/admin/products')}
+                    >
+                      📦 Manage Products
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start"
+                      onClick={() => router.push('/admin/users')}
+                    >
+                      👥 Manage Customers
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start"
+                      onClick={() => router.push('/admin/orders')}
+                    >
+                      📋 Manage Orders
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start"
+                      onClick={() => router.push('/admin')}
+                    >
+                      🎯 Admin Dashboard
+                    </Button>
+                  </>
+                )}
+                
                 <Button 
                   variant="ghost" 
                   className="w-full justify-start text-red-600"
@@ -380,6 +431,7 @@ export default function AccountPage() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Profile Card */}
+            {activeSection === 'profile' && (
             <Card>
               <CardHeader>
                 <CardTitle>Profile Information</CardTitle>
@@ -526,8 +578,10 @@ export default function AccountPage() {
                 </Button>
               </CardContent>
             </Card>
+            )}
 
             {/* Recent Orders */}
+            {activeSection === 'orders' && (
             <Card>
               <CardHeader>
                 <CardTitle>Recent Orders</CardTitle>
@@ -592,8 +646,10 @@ export default function AccountPage() {
                 )}
               </CardContent>
             </Card>
+            )}
 
             {/* Saved Addresses */}
+            {activeSection === 'addresses' && (
             <Card>
               <CardHeader>
                 <CardTitle>Saved Addresses</CardTitle>
@@ -826,6 +882,7 @@ export default function AccountPage() {
                 )}
               </CardContent>
             </Card>
+            )}
 
             {/* Quick Actions */}
             <Card>
