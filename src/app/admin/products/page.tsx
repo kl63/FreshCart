@@ -21,6 +21,20 @@ export default function AdminProducts() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [sortBy, setSortBy] = useState('name')
+  const [showModal, setShowModal] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    slug: '',
+    sku: '',
+    description: '',
+    price: '',
+    original_price: '',
+    category_id: '',
+    stock_quantity: '',
+    thumbnail: ''
+  })
 
   useEffect(() => {
     loadProducts()
@@ -59,11 +73,251 @@ export default function AdminProducts() {
 
   const handleDeleteProduct = async (productId: string) => {
     if (confirm('Are you sure you want to delete this product?')) {
-      // TODO: Implement delete API call
-      console.log('Delete product:', productId)
-      // For now, just remove from local state
-      setProducts(products.filter(p => p.id !== productId))
+      try {
+        const token = localStorage.getItem('token')
+        const response = await fetch(`/api/admin/products/${productId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (response.ok || response.status === 204) {
+          setProducts(products.filter(p => p.id !== productId))
+          alert('Product deleted successfully')
+        } else {
+          const error = await response.json()
+          alert(`Failed to delete product: ${error.detail || error.error || 'Unknown error'}`)
+        }
+      } catch (error) {
+        console.error('Error deleting product:', error)
+        alert(`Error deleting product: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      }
     }
+  }
+
+  const handleOpenAddModal = () => {
+    setEditingProduct(null)
+    setFormData({
+      name: '',
+      slug: '',
+      sku: '',
+      description: '',
+      price: '',
+      original_price: '',
+      category_id: '',
+      stock_quantity: '',
+      thumbnail: ''
+    })
+    setShowModal(true)
+  }
+
+  const handleOpenEditModal = (product: Product) => {
+    setEditingProduct(product)
+    setFormData({
+      name: product.name,
+      slug: product.slug,
+      sku: product.sku || '',
+      description: product.description || '',
+      price: product.price.toString(),
+      original_price: product.original_price?.toString() || '',
+      category_id: product.category_id || '',
+      stock_quantity: product.stock_quantity?.toString() || '',
+      thumbnail: product.thumbnail || ''
+    })
+    setShowModal(true)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      const token = localStorage.getItem('token')
+      
+      // Build product data based on create vs update
+      const productData: any = {}
+      
+      if (editingProduct) {
+        // UPDATE - only send fields that changed and have valid values
+        if (formData.name && formData.name.trim()) {
+          productData.name = formData.name.trim()
+        }
+        if (formData.slug && formData.slug.trim()) {
+          productData.slug = formData.slug.trim()
+        }
+        if (formData.sku && formData.sku.trim()) {
+          productData.sku = formData.sku.trim()
+        }
+        if (formData.description && formData.description.trim()) {
+          productData.description = formData.description.trim()
+        }
+        if (formData.price && !isNaN(parseFloat(formData.price))) {
+          productData.price = parseFloat(formData.price)
+        }
+        if (formData.original_price && !isNaN(parseFloat(formData.original_price))) {
+          productData.original_price = parseFloat(formData.original_price)
+        }
+        // Update category_id if provided (backend will validate)
+        if (formData.category_id && formData.category_id.trim()) {
+          productData.category_id = formData.category_id.trim()
+        }
+        if (formData.stock_quantity !== undefined && formData.stock_quantity !== '') {
+          const qty = parseInt(formData.stock_quantity)
+          if (!isNaN(qty)) {
+            productData.stock_quantity = qty
+            productData.in_stock = qty > 0
+          }
+        }
+        if (formData.thumbnail && formData.thumbnail.trim()) {
+          productData.thumbnail = formData.thumbnail.trim()
+        }
+      } else {
+        // CREATE - required fields with validation
+        if (!formData.name || !formData.name.trim()) {
+          throw new Error('Product name is required')
+        }
+        if (!formData.category_id || !formData.category_id.trim()) {
+          throw new Error('Category ID is required')
+        }
+        if (!formData.price || isNaN(parseFloat(formData.price))) {
+          throw new Error('Valid price is required')
+        }
+        
+        productData.name = formData.name.trim()
+        productData.slug = (formData.slug && formData.slug.trim()) || 
+          formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+        productData.sku = (formData.sku && formData.sku.trim()) || `SKU-${Date.now()}`
+        productData.category_id = formData.category_id.trim()
+        productData.price = parseFloat(formData.price)
+        productData.stock_quantity = parseInt(formData.stock_quantity) || 0
+        productData.in_stock = (parseInt(formData.stock_quantity) || 0) > 0
+        
+        // Optional fields
+        if (formData.description && formData.description.trim()) {
+          productData.description = formData.description.trim()
+        }
+        if (formData.original_price && !isNaN(parseFloat(formData.original_price))) {
+          productData.original_price = parseFloat(formData.original_price)
+        }
+        if (formData.thumbnail && formData.thumbnail.trim()) {
+          productData.thumbnail = formData.thumbnail.trim()
+        }
+      }
+
+      console.log('=== Product Data Being Submitted ===')
+      console.log('Is Update?', !!editingProduct)
+      console.log('Product Data:', JSON.stringify(productData, null, 2))
+      console.log('Data Keys:', Object.keys(productData))
+      console.log('Data is empty?', Object.keys(productData).length === 0)
+      
+      // Don't send empty updates
+      if (editingProduct && Object.keys(productData).length === 0) {
+        alert('No changes detected. Please modify at least one field.')
+        setIsSubmitting(false)
+        return
+      }
+
+      if (editingProduct) {
+        // UPDATE
+        console.log('Updating product:', editingProduct.id)
+        const response = await fetch(
+          `/api/admin/products/${editingProduct.id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(productData)
+          }
+        )
+
+        console.log('Update response status:', response.status)
+        console.log('Update response ok:', response.ok)
+        
+        let responseData
+        try {
+          responseData = await response.json()
+          console.log('Update response data:', responseData)
+        } catch (e) {
+          console.error('Failed to parse response JSON:', e)
+          responseData = {}
+        }
+
+        if (response.ok) {
+          // If we got a 200 but empty response, refetch the product
+          if (!responseData || Object.keys(responseData).length === 0) {
+            console.log('Empty response, refetching products...')
+            await loadProducts()
+            alert('Product updated successfully')
+            setShowModal(false)
+          } else {
+            setProducts(products.map(p => p.id === editingProduct.id ? responseData : p))
+            alert('Product updated successfully')
+            setShowModal(false)
+          }
+        } else {
+          console.error('Update failed:', responseData)
+          alert(`Failed to update product (${response.status}): ${JSON.stringify(responseData)}`)
+        }
+      } else {
+        // CREATE
+        console.log('Creating new product')
+        const response = await fetch(
+          '/api/admin/products',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(productData)
+          }
+        )
+
+        console.log('Create response status:', response.status)
+        console.log('Create response ok:', response.ok)
+        
+        let responseData
+        try {
+          responseData = await response.json()
+          console.log('Create response data:', responseData)
+        } catch (e) {
+          console.error('Failed to parse response JSON:', e)
+          responseData = {}
+        }
+
+        if (response.ok) {
+          // If we got a 200 but empty response, refetch products
+          if (!responseData || Object.keys(responseData).length === 0) {
+            console.log('Empty response, refetching products...')
+            await loadProducts()
+            alert('Product created successfully')
+            setShowModal(false)
+          } else {
+            setProducts([...products, responseData])
+            alert('Product created successfully')
+            setShowModal(false)
+          }
+        } else {
+          console.error('Create failed:', responseData)
+          alert(`Failed to create product (${response.status}): ${JSON.stringify(responseData)}`)
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting product:', error)
+      alert(`Error saving product: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
   }
 
   if (loading) {
@@ -107,7 +361,10 @@ export default function AdminProducts() {
                 Manage your product catalog ({products.length} products)
               </p>
             </div>
-            <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center space-x-2">
+            <button 
+              onClick={handleOpenAddModal}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center space-x-2"
+            >
               <PlusIcon className="h-5 w-5" />
               <span>Add Product</span>
             </button>
@@ -250,10 +507,14 @@ export default function AdminProducts() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
-                          <button className="text-blue-600 hover:text-blue-900">
+                          <button className="text-blue-600 hover:text-blue-900" title="View Details">
                             <EyeIcon className="h-4 w-4" />
                           </button>
-                          <button className="text-green-600 hover:text-green-900">
+                          <button 
+                            onClick={() => handleOpenEditModal(product)}
+                            className="text-green-600 hover:text-green-900"
+                            title="Edit Product"
+                          >
                             <PencilIcon className="h-4 w-4" />
                           </button>
                           <button
@@ -283,6 +544,175 @@ export default function AdminProducts() {
               <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
                 Add Product
               </button>
+            </div>
+          )}
+
+          {/* Add/Edit Product Modal */}
+          {showModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {editingProduct ? 'Edit Product' : 'Add New Product'}
+                  </h2>
+                </div>
+                
+                <form onSubmit={handleSubmit} className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Product Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Slug {!editingProduct && '*'}
+                      </label>
+                      <input
+                        type="text"
+                        name="slug"
+                        value={formData.slug}
+                        onChange={handleInputChange}
+                        required={!editingProduct}
+                        placeholder="product-slug"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate from name</p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        SKU {!editingProduct && '*'}
+                      </label>
+                      <input
+                        type="text"
+                        name="sku"
+                        value={formData.sku}
+                        onChange={handleInputChange}
+                        required={!editingProduct}
+                        placeholder="SKU-12345"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Leave empty to auto-generate</p>
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description
+                      </label>
+                      <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleInputChange}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Price *
+                      </label>
+                      <input
+                        type="number"
+                        name="price"
+                        value={formData.price}
+                        onChange={handleInputChange}
+                        step="0.01"
+                        min="0"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Original Price (optional)
+                      </label>
+                      <input
+                        type="number"
+                        name="original_price"
+                        value={formData.original_price}
+                        onChange={handleInputChange}
+                        step="0.01"
+                        min="0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Category ID {!editingProduct && '*'}
+                      </label>
+                      <input
+                        type="text"
+                        name="category_id"
+                        value={formData.category_id}
+                        onChange={handleInputChange}
+                        required={!editingProduct}
+                        placeholder="Category UUID"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Enter the category UUID</p>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Stock Quantity
+                      </label>
+                      <input
+                        type="number"
+                        name="stock_quantity"
+                        value={formData.stock_quantity}
+                        onChange={handleInputChange}
+                        min="0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Thumbnail URL
+                      </label>
+                      <input
+                        type="url"
+                        name="thumbnail"
+                        value={formData.thumbnail}
+                        onChange={handleInputChange}
+                        placeholder="https://example.com/image.jpg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <button
+                      type="button"
+                      onClick={() => setShowModal(false)}
+                      disabled={isSubmitting}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Saving...' : editingProduct ? 'Update Product' : 'Create Product'}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
         </div>
