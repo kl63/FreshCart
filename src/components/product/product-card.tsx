@@ -122,7 +122,9 @@ export default function ProductCard({ product, className }: ProductCardProps) {
           <div className="space-y-2">
             {/* Category */}
             <p className="text-xs text-gray-500 uppercase tracking-wide">
-              {product.category}
+              {typeof product.category === 'object' 
+                ? product.category?.name || 'Uncategorized'
+                : product.category || 'Uncategorized'}
             </p>
 
             {/* Name */}

@@ -170,7 +170,11 @@ export default function WishlistPage() {
                       </h3>
                     </Link>
                     
-                    <p className="text-sm text-gray-600">{item.category}</p>
+                    <p className="text-sm text-gray-600">
+                      {typeof item.category === 'object' 
+                        ? item.category?.name || 'Uncategorized'
+                        : item.category || 'Uncategorized'}
+                    </p>
                     
                     {/* Rating */}
                     <div className="flex items-center space-x-1">

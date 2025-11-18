@@ -317,7 +317,9 @@ export default function CartPage() {
                         {item.product.name}
                       </Link>
                       <p className="text-sm text-gray-600">
-                        {item.product.category}
+                        {typeof item.product.category === 'object' 
+                          ? item.product.category?.name || 'Uncategorized'
+                          : item.product.category || 'Uncategorized'}
                       </p>
                       {item.product.weight && (
                         <p className="text-sm text-gray-600">
