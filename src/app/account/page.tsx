@@ -7,9 +7,35 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { AuthService, type User } from '@/lib/auth'
 
+interface Order {
+  id: string
+  order_number: string
+  total_amount: number
+  status: string
+  created_at: string
+  updated_at: string
+}
+
+interface Address {
+  id: string
+  type: string
+  first_name: string
+  last_name: string
+  street: string
+  city: string
+  state: string
+  zip_code: string
+  country: string
+  is_default: boolean
+}
+
 export default function AccountPage() {
   const [user, setUser] = useState<User | null>(null)
+  const [orders, setOrders] = useState<Order[]>([])
+  const [addresses, setAddresses] = useState<Address[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true)
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
   const [updateError, setUpdateError] = useState('')
   const [updateSuccess, setUpdateSuccess] = useState('')
@@ -70,6 +96,74 @@ export default function AccountPage() {
     // Add a small delay to allow data to be stored
     setTimeout(checkAuth, 100)
   }, [router])
+
+  // Fetch user orders
+  useEffect(() => {
+    const fetchOrders = async () => {
+      const token = AuthService.getToken()
+      if (!token) return
+
+      try {
+        setIsLoadingOrders(true)
+        const response = await fetch('https://fastapi.kevinlinportfolio.com/api/v1/orders/?limit=5', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setOrders(data.items || data || [])
+        } else {
+          console.error('Failed to fetch orders:', response.status)
+          setOrders([])
+        }
+      } catch (error) {
+        console.error('Error fetching orders:', error)
+        setOrders([])
+      } finally {
+        setIsLoadingOrders(false)
+      }
+    }
+
+    if (user) {
+      fetchOrders()
+    }
+  }, [user])
+
+  // Fetch user addresses
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      const token = AuthService.getToken()
+      if (!token) return
+
+      try {
+        setIsLoadingAddresses(true)
+        const response = await fetch('https://fastapi.kevinlinportfolio.com/api/v1/addresses/', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setAddresses(data || [])
+        } else {
+          console.error('Failed to fetch addresses:', response.status)
+          setAddresses([])
+        }
+      } catch (error) {
+        console.error('Error fetching addresses:', error)
+        setAddresses([])
+      } finally {
+        setIsLoadingAddresses(false)
+      }
+    }
+
+    if (user) {
+      fetchAddresses()
+    }
+  }, [user])
 
   const handleSignOut = async () => {
     await AuthService.logout()
@@ -192,20 +286,14 @@ export default function AccountPage() {
                 <Button variant="ghost" className="w-full justify-start">
                   Profile Information
                 </Button>
-                <Button variant="ghost" className="w-full justify-start">
+                <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/orders')}>
                   Order History
                 </Button>
                 <Button variant="ghost" className="w-full justify-start">
                   Addresses
                 </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  Payment Methods
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  Preferences
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  Loyalty Program
+                <Button variant="ghost" className="w-full justify-start" onClick={() => router.push('/wishlist')}>
+                  Wishlist
                 </Button>
                 <Button 
                   variant="ghost" 
@@ -368,75 +456,123 @@ export default function AccountPage() {
               </CardContent>
             </Card>
 
-            {/* Loyalty Program */}
-            <Card>
-              <CardHeader>
-                <CardTitle>FreshCart Rewards</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold">Silver Member</h3>
-                    <p className="text-gray-600">1,250 points available</p>
-                  </div>
-                  <Badge variant="secondary" className="bg-gray-200">
-                    Silver
-                  </Badge>
-                </div>
-                
-                <div className="bg-gray-200 rounded-full h-2 mb-4">
-                  <div className="bg-green-600 h-2 rounded-full" style={{ width: '62%' }}></div>
-                </div>
-                
-                <p className="text-sm text-gray-600 mb-4">
-                  Spend $750 more to reach Gold status and unlock exclusive benefits!
-                </p>
-                
-                <Button variant="outline">
-                  View Rewards
-                </Button>
-              </CardContent>
-            </Card>
-
             {/* Recent Orders */}
             <Card>
               <CardHeader>
                 <CardTitle>Recent Orders</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                    <div>
-                      <p className="font-semibold">Order #12345</p>
-                      <p className="text-sm text-gray-600">Delivered on Dec 15, 2024</p>
-                      <p className="text-sm text-gray-600">5 items • $47.82</p>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant="success">Delivered</Badge>
-                      <Button variant="outline" size="sm" className="mt-2">
-                        View Details
-                      </Button>
-                    </div>
+                {isLoadingOrders ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+                    <p className="mt-2 text-gray-600">Loading orders...</p>
                   </div>
-                  
-                  <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                    <div>
-                      <p className="font-semibold">Order #12344</p>
-                      <p className="text-sm text-gray-600">Delivered on Dec 12, 2024</p>
-                      <p className="text-sm text-gray-600">8 items • $63.45</p>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant="success">Delivered</Badge>
-                      <Button variant="outline" size="sm" className="mt-2">
-                        Reorder
-                      </Button>
-                    </div>
+                ) : orders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">No orders yet</p>
+                    <Button variant="outline" className="mt-4" onClick={() => router.push('/products')}>
+                      Start Shopping
+                    </Button>
                   </div>
-                </div>
-                
-                <Button variant="outline" className="w-full mt-4">
-                  View All Orders
-                </Button>
+                ) : (
+                  <>
+                    <div className="space-y-4">
+                      {orders.map((order) => (
+                        <div key={order.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                          <div>
+                            <p className="font-semibold">Order #{order.order_number}</p>
+                            <p className="text-sm text-gray-600">
+                              {new Date(order.created_at).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}
+                            </p>
+                            <p className="text-sm text-gray-600">${order.total_amount.toFixed(2)}</p>
+                          </div>
+                          <div className="text-right">
+                            <Badge 
+                              variant={
+                                order.status === 'delivered' ? 'success' : 
+                                order.status === 'pending' ? 'secondary' : 
+                                order.status === 'processing' ? 'default' : 
+                                'destructive'
+                              }
+                            >
+                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                            </Badge>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="mt-2"
+                              onClick={() => router.push(`/order/${order.id}/success`)}
+                            >
+                              View Details
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <Button variant="outline" className="w-full mt-4" onClick={() => router.push('/orders')}>
+                      View All Orders
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Saved Addresses */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Saved Addresses</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingAddresses ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+                    <p className="mt-2 text-gray-600">Loading addresses...</p>
+                  </div>
+                ) : addresses.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">No saved addresses</p>
+                    <Button variant="outline" className="mt-4">
+                      Add Address
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-4">
+                      {addresses.map((address) => (
+                        <div key={address.id} className="p-4 border border-gray-200 rounded-lg">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <p className="font-semibold">{address.type.charAt(0).toUpperCase() + address.type.slice(1)} Address</p>
+                                {address.is_default && (
+                                  <Badge variant="secondary">Default</Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-900">{address.first_name} {address.last_name}</p>
+                              <p className="text-sm text-gray-600">{address.street}</p>
+                              <p className="text-sm text-gray-600">
+                                {address.city}, {address.state} {address.zip_code}
+                              </p>
+                              <p className="text-sm text-gray-600">{address.country}</p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              Edit
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <Button variant="outline" className="w-full mt-4">
+                      Add New Address
+                    </Button>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -447,21 +583,37 @@ export default function AccountPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <Button variant="outline" className="h-auto p-4 flex flex-col items-center">
-                    <div className="text-2xl mb-2">📍</div>
-                    <span>Manage Addresses</span>
+                  <Button 
+                    variant="outline" 
+                    className="h-auto p-4 flex flex-col items-center"
+                    onClick={() => router.push('/cart')}
+                  >
+                    <div className="text-2xl mb-2">🛒</div>
+                    <span>View Cart</span>
                   </Button>
-                  <Button variant="outline" className="h-auto p-4 flex flex-col items-center">
-                    <div className="text-2xl mb-2">💳</div>
-                    <span>Payment Methods</span>
-                  </Button>
-                  <Button variant="outline" className="h-auto p-4 flex flex-col items-center">
+                  <Button 
+                    variant="outline" 
+                    className="h-auto p-4 flex flex-col items-center"
+                    onClick={() => router.push('/wishlist')}
+                  >
                     <div className="text-2xl mb-2">❤️</div>
                     <span>My Wishlist</span>
                   </Button>
-                  <Button variant="outline" className="h-auto p-4 flex flex-col items-center">
-                    <div className="text-2xl mb-2">🔔</div>
-                    <span>Notifications</span>
+                  <Button 
+                    variant="outline" 
+                    className="h-auto p-4 flex flex-col items-center"
+                    onClick={() => router.push('/products')}
+                  >
+                    <div className="text-2xl mb-2">🛍️</div>
+                    <span>Shop Products</span>
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-auto p-4 flex flex-col items-center"
+                    onClick={() => router.push('/deals')}
+                  >
+                    <div className="text-2xl mb-2">🔥</div>
+                    <span>View Deals</span>
                   </Button>
                 </div>
               </CardContent>
