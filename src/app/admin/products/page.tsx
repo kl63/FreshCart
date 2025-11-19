@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import toast, { Toaster } from 'react-hot-toast'
 import AdminGuard from '@/components/admin/admin-guard'
 import AdminLayout from '@/components/admin/admin-layout'
 import { fetchProducts } from '@/lib/products'
-import { Product } from '@/types'
+import { fetchAllCategories } from '@/lib/categories'
+import { Product, Category } from '@/types'
 import {
   PlusIcon,
   PencilIcon,
@@ -17,6 +19,7 @@ import {
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -43,8 +46,12 @@ export default function AdminProducts() {
   const loadProducts = async () => {
     try {
       setLoading(true)
-      const data = await fetchProducts({ limit: 100 })
-      setProducts(data)
+      const [productsData, categoriesData] = await Promise.all([
+        fetchProducts({ limit: 100 }),
+        fetchAllCategories()
+      ])
+      setProducts(productsData)
+      setCategories(categoriesData)
     } catch (error) {
       console.error('Error loading products:', error)
     } finally {
@@ -73,7 +80,7 @@ export default function AdminProducts() {
   })
 
   const handleDeleteProduct = async (productId: string) => {
-    if (confirm('Are you sure you want to delete this product?')) {
+    if (window.confirm('Are you sure you want to delete this product?')) {
       try {
         const token = localStorage.getItem('token')
         const response = await fetch(`/api/admin/products/${productId}`, {
@@ -85,14 +92,14 @@ export default function AdminProducts() {
 
         if (response.ok || response.status === 204) {
           setProducts(products.filter(p => p.id !== productId))
-          alert('Product deleted successfully')
+          toast.success('Product deleted successfully')
         } else {
           const error = await response.json()
-          alert(`Failed to delete product: ${error.detail || error.error || 'Unknown error'}`)
+          toast.error(`Failed to delete product: ${error.detail || error.error || 'Unknown error'}`)
         }
       } catch (error) {
         console.error('Error deleting product:', error)
-        alert(`Error deleting product: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        toast.error(`Error deleting product: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }
   }
@@ -179,7 +186,7 @@ export default function AdminProducts() {
           throw new Error('Product name is required')
         }
         if (!formData.category_id || !formData.category_id.trim()) {
-          throw new Error('Category ID is required')
+          throw new Error('Please select a category')
         }
         if (!formData.price || isNaN(parseFloat(formData.price))) {
           throw new Error('Valid price is required')
@@ -214,7 +221,7 @@ export default function AdminProducts() {
       
       // Don't send empty updates
       if (editingProduct && Object.keys(productData).length === 0) {
-        alert('No changes detected. Please modify at least one field.')
+        toast('No changes detected. Please modify at least one field.', { icon: '⚠️' })
         setIsSubmitting(false)
         return
       }
@@ -251,16 +258,16 @@ export default function AdminProducts() {
           if (!responseData || Object.keys(responseData).length === 0) {
             console.log('Empty response, refetching products...')
             await loadProducts()
-            alert('Product updated successfully')
+            toast.success('Product updated successfully')
             setShowModal(false)
           } else {
             setProducts(products.map(p => p.id === editingProduct.id ? responseData : p))
-            alert('Product updated successfully')
+            toast.success('Product updated successfully')
             setShowModal(false)
           }
         } else {
           console.error('Update failed:', responseData)
-          alert(`Failed to update product (${response.status}): ${JSON.stringify(responseData)}`)
+          toast.error(`Failed to update product: ${responseData.error || 'Unknown error'}`)
         }
       } else {
         // CREATE
@@ -294,21 +301,21 @@ export default function AdminProducts() {
           if (!responseData || Object.keys(responseData).length === 0) {
             console.log('Empty response, refetching products...')
             await loadProducts()
-            alert('Product created successfully')
+            toast.success('Product created successfully')
             setShowModal(false)
           } else {
             setProducts([...products, responseData])
-            alert('Product created successfully')
+            toast.success('Product created successfully')
             setShowModal(false)
           }
         } else {
           console.error('Create failed:', responseData)
-          alert(`Failed to create product (${response.status}): ${JSON.stringify(responseData)}`)
+          toast.error(`Failed to create product: ${responseData.error || 'Unknown error'}`)
         }
       }
     } catch (error) {
       console.error('Error submitting product:', error)
-      alert(`Error saving product: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast.error(`Error saving product: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsSubmitting(false)
     }
@@ -353,6 +360,7 @@ export default function AdminProducts() {
   return (
     <AdminGuard>
       <AdminLayout>
+        <Toaster position="top-right" />
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -654,18 +662,25 @@ export default function AdminProducts() {
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Category ID {!editingProduct && '*'}
+                        Category {!editingProduct && '*'}
                       </label>
-                      <input
-                        type="text"
+                      <select
                         name="category_id"
                         value={formData.category_id}
                         onChange={handleInputChange}
                         required={!editingProduct}
-                        placeholder="Category UUID"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">Enter the category UUID</p>
+                      >
+                        <option value="">Select a category</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {categories.length === 0 ? 'Loading categories...' : 'Select the product category'}
+                      </p>
                     </div>
                     
                     <div>
