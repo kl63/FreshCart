@@ -19,12 +19,16 @@ jobs:
           node-version: "20"
           cache: "npm"
 
-      # Install prod deps only (smaller) on GitHub runner
-      - name: Install dependencies (prod only)
-        run: npm ci --omit=dev --legacy-peer-deps --no-audit --no-fund
+      # Need devDependencies for next.config.ts + build tooling
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
 
       - name: Build Next.js
         run: npm run build
+
+      # After build, remove dev deps so droplet only gets prod deps
+      - name: Prune devDependencies (prod only)
+        run: npm prune --omit=dev
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -34,7 +38,6 @@ jobs:
       - name: Add droplet to known_hosts
         run: ssh-keyscan -H 134.122.5.11 >> ~/.ssh/known_hosts
 
-      # Ship the built app + node_modules to droplet
       - name: Sync app to droplet
         run: |
           rsync -az --delete \
@@ -47,8 +50,6 @@ jobs:
           ssh kevinlin192003@134.122.5.11 << 'EOF'
           set -e
           cd /var/www/FreshCart
-
-          # Make sure folder is owned by your user (prevents future permission issues)
           sudo chown -R kevinlin192003:kevinlin192003 /var/www/FreshCart
 
           if pm2 list | grep -q "FreshCart"; then
