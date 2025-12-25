@@ -25,10 +25,10 @@ jobs:
 
       - name: Deploy to Droplet
         env:
-          HOST: 159.89.245.206
+          HOST: 134.122.5.11
           USERNAME: kevinlin192003
-          TARGET_DIR: /var/www/FreshCart-site
-          APP_NAME: FreshCart-site
+          TARGET_DIR: /var/www/FreshCart
+          APP_NAME: FreshCart
           PORT: 4000
 
         run: |
