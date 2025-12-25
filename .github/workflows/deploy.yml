@@ -2,8 +2,7 @@ name: Deploy FreshCart Site
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   deploy:
@@ -25,7 +24,6 @@ jobs:
       - name: Build Next.js
         run: npm run build
 
-      # After build, keep prod deps only in node_modules to reduce upload size
       - name: Prune devDependencies (prod only)
         run: npm prune --omit=dev
 
@@ -37,7 +35,7 @@ jobs:
       - name: Add droplet to known_hosts
         run: ssh-keyscan -H 134.122.5.11 >> ~/.ssh/known_hosts
 
-      - name: Deploy to droplet (atomic release)
+      - name: Deploy (tar upload + atomic symlink)
         env:
           HOST: 134.122.5.11
           USERNAME: kevinlin192003
@@ -50,13 +48,11 @@ jobs:
           # Create release dir on droplet
           ssh $USERNAME@$HOST "mkdir -p /var/www/FreshCart/releases/$RELEASE_ID"
 
-          # Rsync to the NEW release directory (no --delete needed)
-          rsync -az \
-            --exclude ".git" \
-            --exclude ".github" \
-            ./ $USERNAME@$HOST:/var/www/FreshCart/releases/$RELEASE_ID
+          # Stream a tarball over SSH into the release folder (no rsync needed)
+          tar --exclude=".git" --exclude=".github" -czf - . | \
+            ssh $USERNAME@$HOST "tar -xzf - -C /var/www/FreshCart/releases/$RELEASE_ID"
 
-          # Switch symlink + restart
+          # Switch symlink + restart PM2 + cleanup
           ssh $USERNAME@$HOST << EOF
             set -e
             APP_NAME="${APP_NAME}"
