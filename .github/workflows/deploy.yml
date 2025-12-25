@@ -17,61 +17,46 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
+
+      # Install prod deps only (smaller) on GitHub runner
+      - name: Install dependencies (prod only)
+        run: npm ci --omit=dev --legacy-peer-deps --no-audit --no-fund
+
+      - name: Build Next.js
+        run: npm run build
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.FRESHCART_DEPLOY_KEY }}
 
-      - name: Deploy to Droplet
-        env:
-          HOST: 134.122.5.11
-          USERNAME: kevinlin192003
-          TARGET_DIR: /var/www/FreshCart
-          APP_NAME: FreshCart
-          PORT: 4000
+      - name: Add droplet to known_hosts
+        run: ssh-keyscan -H 134.122.5.11 >> ~/.ssh/known_hosts
+
+      # Ship the built app + node_modules to droplet
+      - name: Sync app to droplet
         run: |
-          ssh -o StrictHostKeyChecking=no $USERNAME@$HOST << 'EOF'
+          rsync -az --delete \
+            --exclude ".git" \
+            --exclude ".github" \
+            ./ kevinlin192003@134.122.5.11:/var/www/FreshCart
+
+      - name: Restart PM2 on droplet
+        run: |
+          ssh kevinlin192003@134.122.5.11 << 'EOF'
           set -e
+          cd /var/www/FreshCart
 
-          echo "🚀 Starting FreshCart deployment..."
+          # Make sure folder is owned by your user (prevents future permission issues)
+          sudo chown -R kevinlin192003:kevinlin192003 /var/www/FreshCart
 
-          TARGET_DIR="/var/www/FreshCart"
-          APP_NAME="FreshCart"
-          PORT="4000"
-
-          # Ensure base directory exists and ownership is correct
-          echo "🔧 Ensuring directory ownership..."
-          sudo mkdir -p $TARGET_DIR
-          sudo chown -R kevinlin192003:kevinlin192003 $TARGET_DIR
-
-          # Clone or update repo
-          if [ ! -d "$TARGET_DIR/.git" ]; then
-            echo "📦 Cloning repository..."
-            git clone git@github.com:kl63/FreshCart.git $TARGET_DIR
+          if pm2 list | grep -q "FreshCart"; then
+            pm2 restart "FreshCart"
           else
-            echo "🔄 Updating repository..."
-            cd $TARGET_DIR
-            git fetch origin
-            git reset --hard origin/main
-          fi
-
-          cd $TARGET_DIR
-
-          echo "📦 Installing dependencies..."
-          npm install --legacy-peer-deps
-
-          echo "🏗️ Building Next.js app..."
-          npm run build
-
-          echo "♻️ Restarting app with PM2..."
-          if pm2 list | grep -q "$APP_NAME"; then
-            pm2 restart "$APP_NAME"
-          else
-            pm2 start npm --name "$APP_NAME" -- start -- --port="$PORT"
+            pm2 start npm --name "FreshCart" -- start -- --port=4000
           fi
 
           pm2 save
-
           echo "✅ Deployment complete!"
           EOF
