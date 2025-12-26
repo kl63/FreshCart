@@ -16,7 +16,6 @@ import {
 } from '@/lib/stripe'
 
 import type {
-  CreateAddressRequest,
   CreateOrderWithPaymentRequest
 } from '@/lib/stripe-types'
 import { StripePaymentForm } from '@/components/stripe/StripePaymentForm'
@@ -26,6 +25,23 @@ import {
   ArrowLeftIcon,
   CheckCircleIcon 
 } from '@heroicons/react/24/outline'
+
+ function getErrorMessage(error: unknown) {
+   if (
+     error &&
+     typeof error === 'object' &&
+     'message' in error &&
+     typeof (error as { message?: unknown }).message === 'string'
+   ) {
+     return (error as { message: string }).message
+   }
+   if (typeof error === 'string') return error
+   try {
+     return JSON.stringify(error)
+   } catch {
+     return 'Unknown error'
+   }
+ }
 
 interface ShippingInfo {
   firstName: string
@@ -302,7 +318,8 @@ export default function CheckoutPage() {
         // Try to parse JSON error response from API
         try {
           // Extract JSON from common error patterns
-          const jsonMatch = error.message.match(/\{.*\}/)
+          const msg = getErrorMessage(error)
+          const jsonMatch = msg.match(/\{.*\}/)
           if (jsonMatch) {
             const jsonError = JSON.parse(jsonMatch[0])
             
@@ -501,7 +518,8 @@ export default function CheckoutPage() {
         // Try to parse JSON error response from API
         try {
           // Extract JSON from common error patterns
-          const jsonMatch = error.message.match(/\{.*\}/)
+          const msg = getErrorMessage(error)
+          const jsonMatch = msg.match(/\{.*\}/)
           if (jsonMatch) {
             const jsonError = JSON.parse(jsonMatch[0])
             
