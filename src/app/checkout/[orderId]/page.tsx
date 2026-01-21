@@ -63,6 +63,14 @@ export default function CheckoutPage() {
 
         const data = await response.json();
         console.log('✅ Payment intent created:', data);
+        console.log('🔑 Client secret:', data.client_secret);
+        console.log('🔑 Client secret type:', typeof data.client_secret);
+        
+        // Validate client_secret exists and is a string
+        if (!data.client_secret || typeof data.client_secret !== 'string') {
+          throw new Error(`Invalid client_secret received from backend. Got: ${JSON.stringify(data)}`);
+        }
+        
         setPaymentIntent(data);
         
       } catch (err) {
