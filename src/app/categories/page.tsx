@@ -4,11 +4,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { fetchAllCategories } from '@/lib/categories'
+import { fetchProducts } from '@/lib/products'
 import { Category } from '@/types'
 import { useEffect, useState } from 'react'
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
+  const [productCounts, setProductCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -16,7 +18,29 @@ export default function CategoriesPage() {
     async function loadCategories() {
       try {
         setLoading(true)
-        const fetchedCategories = await fetchAllCategories()
+        const [fetchedCategories, products] = await Promise.all([
+          fetchAllCategories(),
+          fetchProducts({ limit: 100 })
+        ])
+        
+        // Calculate actual product counts by category
+        const counts: Record<string, number> = {}
+        products.forEach(product => {
+          let categoryId: string | null = null
+          
+          if (product.category && typeof product.category === 'object') {
+            categoryId = product.category.id
+          } else if (product.category_id) {
+            categoryId = product.category_id
+          }
+          
+          if (categoryId) {
+            counts[categoryId] = (counts[categoryId] || 0) + 1
+          }
+        })
+        
+        console.log('📊 All Categories page - Product counts:', counts)
+        setProductCounts(counts)
         setCategories(fetchedCategories)
       } catch (err) {
         setError('Failed to load categories. Please try again later.')
@@ -74,6 +98,7 @@ export default function CategoriesPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {categories.map((category, index) => {
+              const count = productCounts[category.id] || 0
               // Create gradient colors based on category index
               const gradients = [
                 'from-green-400 to-blue-500',
@@ -139,7 +164,7 @@ export default function CategoriesPage() {
                       <div className="mt-auto">
                         <div className="flex items-center justify-between">
                           <div className={`bg-gradient-to-r ${gradient} text-white text-sm px-4 py-2 rounded-full font-bold shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105`}>
-                            {category.product_count || 0} products
+                            {count} products
                           </div>
                           
                           <div className="flex items-center text-gray-400 group-hover:text-gray-600 transition-colors">
