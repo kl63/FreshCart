@@ -20,23 +20,51 @@ export async function GET(request: NextRequest) {
 
     console.log('Fetching products from:', apiUrl.toString())
 
-    const response = await fetch(apiUrl.toString(), {
-      headers: {
-        'accept': 'application/json',
-      },
-      // Add cache control for development
-      cache: process.env.NODE_ENV === 'development' ? 'no-store' : 'default',
-    })
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('API error response:', errorText)
-      throw new Error(`API responded with status: ${response.status}`)
+    try {
+      const response = await fetch(apiUrl.toString(), {
+        headers: {
+          'accept': 'application/json',
+        },
+        signal: controller.signal,
+        cache: 'no-store',
+        next: { revalidate: 0 }
+      })
+
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('API error response:', errorText)
+        throw new Error(`API responded with status: ${response.status}`)
+      }
+
+      const products = await response.json()
+      
+      // Validate response is an array
+      if (!Array.isArray(products)) {
+        console.error('Invalid response format:', products)
+        throw new Error('API returned invalid data format')
+      }
+
+      console.log(`✅ Successfully fetched ${products.length} products`)
+
+      return NextResponse.json(products, {
+        headers: {
+          'Cache-Control': 'no-store, must-revalidate',
+          'Content-Type': 'application/json',
+        }
+      })
+    } catch (fetchError) {
+      clearTimeout(timeoutId)
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        throw new Error('Request timeout - API took too long to respond')
+      }
+      throw fetchError
     }
-
-    const products = await response.json()
-
-    return NextResponse.json(products)
   } catch (error) {
     console.error('Error fetching products:', error)
     return NextResponse.json(

@@ -9,23 +9,77 @@ import { Product } from '@/types'
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    let mounted = true
+    let retryCount = 0
+    const maxRetries = 3
+
     const fetchProducts = async () => {
       try {
-        const response = await fetch('/api/products?page=1&limit=100')
+        console.log(`🔄 Fetching products (attempt ${retryCount + 1}/${maxRetries})...`)
+        
+        const response = await fetch('/api/products?page=1&limit=100', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          }
+        })
+        
+        console.log('📡 Response status:', response.status, response.statusText)
+        
+        if (!mounted) return
+        
         if (response.ok) {
           const data = await response.json()
-          setProducts(data)
-          console.log('✅ Loaded', data.length, 'products from backend')
+          console.log('✅ Loaded', data.length, 'products')
+          
+          if (mounted && Array.isArray(data)) {
+            setProducts(data)
+            setError(null)
+            setLoading(false)
+          } else if (retryCount < maxRetries - 1) {
+            retryCount++
+            console.log('⚠️ Invalid data, retrying...')
+            setTimeout(() => fetchProducts(), 1000 * retryCount)
+          } else {
+            setError('Invalid data received from API')
+            setLoading(false)
+          }
+        } else {
+          if (retryCount < maxRetries - 1) {
+            retryCount++
+            console.log(`⚠️ Request failed, retrying in ${retryCount}s...`)
+            setTimeout(() => fetchProducts(), 1000 * retryCount)
+          } else {
+            const errorData = await response.json().catch(() => ({}))
+            console.error('❌ API error:', errorData)
+            setError(`Failed to load products: ${response.status}`)
+            setLoading(false)
+          }
         }
       } catch (error) {
-        console.error('Failed to load products:', error)
-      } finally {
-        setLoading(false)
+        console.error('❌ Failed to load products:', error)
+        
+        if (retryCount < maxRetries - 1) {
+          retryCount++
+          console.log(`⚠️ Error occurred, retrying in ${retryCount}s...`)
+          setTimeout(() => fetchProducts(), 1000 * retryCount)
+        } else {
+          if (mounted) {
+            setError(error instanceof Error ? error.message : 'Unknown error')
+            setLoading(false)
+          }
+        }
       }
     }
+    
     fetchProducts()
+    
+    return () => {
+      mounted = false
+    }
   }, [])
 
   if (loading) {
@@ -34,6 +88,33 @@ export default function ProductsPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Failed to Load Products</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">📦</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Products Found</h2>
+          <p className="text-gray-600">Check console for details</p>
         </div>
       </div>
     )
