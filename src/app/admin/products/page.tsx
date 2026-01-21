@@ -265,7 +265,11 @@ export default function AdminProducts() {
 
       if (editingProduct) {
         // UPDATE
-        console.log('Updating product:', editingProduct.id)
+        console.log('=== STARTING PRODUCT UPDATE ===')
+        console.log('Product ID:', editingProduct.id)
+        console.log('Update payload:', JSON.stringify(productData, null, 2))
+        console.log('Token exists:', !!token)
+        
         const response = await fetch(
           `/api/admin/products/${editingProduct.id}`,
           {
@@ -278,33 +282,32 @@ export default function AdminProducts() {
           }
         )
 
-        console.log('Update response status:', response.status)
-        console.log('Update response ok:', response.ok)
+        console.log('=== UPDATE RESPONSE ===')
+        console.log('Status:', response.status)
+        console.log('Status Text:', response.statusText)
+        console.log('OK:', response.ok)
         
         let responseData
         try {
           responseData = await response.json()
-          console.log('Update response data:', responseData)
+          console.log('Response data:', JSON.stringify(responseData, null, 2))
         } catch (e) {
           console.error('Failed to parse response JSON:', e)
           responseData = {}
         }
 
         if (response.ok) {
-          // If we got a 200 but empty response, refetch the product
-          if (!responseData || Object.keys(responseData).length === 0) {
-            console.log('Empty response, refetching products...')
-            await loadProducts()
-            toast.success('Product updated successfully')
-            setShowModal(false)
-          } else {
-            setProducts(products.map(p => p.id === editingProduct.id ? responseData : p))
-            toast.success('Product updated successfully')
-            setShowModal(false)
-          }
+          console.log('✅ Update succeeded!')
+          // Always refetch to ensure we have the latest data
+          console.log('🔄 Refetching all products to ensure fresh data...')
+          await loadProducts()
+          toast.success('Product updated successfully')
+          setShowModal(false)
         } else {
-          console.error('Update failed:', responseData)
-          toast.error(`Failed to update product: ${responseData.error || 'Unknown error'}`)
+          console.error('❌ Update failed!')
+          console.error('Error details:', responseData)
+          const errorMsg = responseData.detail || responseData.error || JSON.stringify(responseData)
+          toast.error(`Failed to update product: ${errorMsg}`)
         }
       } else {
         // CREATE

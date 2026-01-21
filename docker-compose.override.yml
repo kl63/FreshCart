@@ -1,0 +1,12 @@
+services:
+  freshcart-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: freshcart-local:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://fastapi.kevinlinportfolio.com/api/v1
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
