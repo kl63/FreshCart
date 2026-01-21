@@ -84,34 +84,36 @@ export default function AdminProducts() {
   })
 
   const handleDeleteProduct = async (productId: string) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
+    if (window.confirm('Are you sure you want to deactivate this product? It will be hidden from users but can be reactivated later.')) {
       try {
         const token = localStorage.getItem('token')
         
-        console.log('🗑️ Attempting to delete product:', productId)
+        console.log('🗑️ Attempting to deactivate product:', productId)
         
+        // Soft delete by setting is_active to false
         const response = await fetch(`/api/admin/products/${productId}`, {
-          method: 'DELETE',
+          method: 'PUT',
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ is_active: false })
         })
 
-        console.log('Delete response status:', response.status)
+        console.log('Deactivate response status:', response.status)
 
-        if (response.ok || response.status === 204) {
+        if (response.ok) {
+          // Remove from UI or mark as inactive
           setProducts(products.filter(p => p.id !== productId))
-          toast.success('Product deleted successfully')
-          console.log('✅ Product deleted successfully')
+          toast.success('Product deactivated successfully')
+          console.log('✅ Product deactivated successfully')
         } else {
           let errorMessage = 'Unknown error'
           
           try {
             const error = await response.json()
-            console.error('❌ Delete failed with error:', error)
-            console.error('❌ Full error details:', JSON.stringify(error, null, 2))
+            console.error('❌ Deactivate failed with error:', error)
             
-            // Extract detailed error message
             if (error.detail) {
               if (typeof error.detail === 'string') {
                 errorMessage = error.detail
@@ -123,24 +125,17 @@ export default function AdminProducts() {
             } else if (error.error) {
               errorMessage = error.error
             }
-            
-            // Check for common database constraint errors
-            if (errorMessage.toLowerCase().includes('foreign key') || 
-                errorMessage.toLowerCase().includes('constraint') ||
-                errorMessage.toLowerCase().includes('referenced')) {
-              errorMessage = 'Cannot delete: Product is referenced in existing orders. Please archive it instead.'
-            }
           } catch (parseError) {
             console.error('Failed to parse error response:', parseError)
           }
           
-          toast.error(`Failed to delete product: ${errorMessage}`, {
+          toast.error(`Failed to deactivate product: ${errorMessage}`, {
             duration: 5000
           })
         }
       } catch (error) {
-        console.error('❌ Error deleting product:', error)
-        toast.error(`Error deleting product: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        console.error('❌ Error deactivating product:', error)
+        toast.error(`Error deactivating product: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }
   }
