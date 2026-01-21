@@ -4,11 +4,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { fetchAllCategories } from '@/lib/categories'
+import { fetchProducts } from '@/lib/products'
 import { Category } from '@/types'
 import { useEffect, useState } from 'react'
 
 export default function CategoryGrid() {
   const [categories, setCategories] = useState<Category[]>([])
+  const [productCounts, setProductCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -16,7 +18,21 @@ export default function CategoryGrid() {
     async function loadCategories() {
       try {
         setLoading(true)
-        const fetchedCategories = await fetchAllCategories()
+        const [fetchedCategories, products] = await Promise.all([
+          fetchAllCategories(),
+          fetchProducts({ limit: 100 })
+        ])
+        
+        // Calculate actual product counts by category
+        const counts: Record<string, number> = {}
+        products.forEach(product => {
+          if (product.category && typeof product.category === 'object') {
+            const categoryId = product.category.id
+            counts[categoryId] = (counts[categoryId] || 0) + 1
+          }
+        })
+        
+        setProductCounts(counts)
         // Show first 8 categories for home page
         setCategories(fetchedCategories.slice(0, 8))
       } catch (err) {
@@ -133,7 +149,7 @@ export default function CategoryGrid() {
                       
                       <div className="mt-auto">
                         <div className={`bg-gradient-to-r ${gradient} text-white text-xs px-3 py-1.5 rounded-full font-medium shadow-md group-hover:shadow-lg transition-shadow duration-300 text-center`}>
-                          {category.product_count || 0} products
+                          {productCounts[category.id] || 0} products
                         </div>
                       </div>
                     </CardContent>
