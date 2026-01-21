@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://fastapi.kevinlinportfolio.com/api/v1'
 
@@ -61,6 +62,15 @@ export async function PUT(
     if (contentType && contentType.includes('application/json')) {
       const data = await response.json()
       console.log('API Proxy: Backend response data:', data)
+      
+      // Revalidate Next.js cache for products pages
+      if (response.ok) {
+        console.log('🔄 Revalidating Next.js cache for products pages...')
+        revalidatePath('/products')
+        revalidatePath('/admin/products')
+        revalidatePath(`/products/${id}`)
+      }
+      
       return NextResponse.json(data, { 
         status: response.status,
         headers: {
