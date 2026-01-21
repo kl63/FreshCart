@@ -107,7 +107,8 @@ export default function CategoryGrid() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {categories.map((category, index) => {
-              console.log(`🎨 Rendering ${category.name}: productCounts[${category.id}] =`, productCounts[category.id])
+              const count = productCounts[category.id] || 0
+              console.log(`🎨 Rendering ${category.name}: count = ${count}, productCounts =`, productCounts)
               // Create gradient colors based on category index
               const gradients = [
                 'from-green-400 to-blue-500',
@@ -174,7 +175,7 @@ export default function CategoryGrid() {
                       
                       <div className="mt-auto">
                         <div className={`bg-gradient-to-r ${gradient} text-white text-xs px-3 py-1.5 rounded-full font-medium shadow-md group-hover:shadow-lg transition-shadow duration-300 text-center`}>
-                          {`${productCounts[category.id] || 0} products`}
+                          {count} products
                         </div>
                       </div>
                     </CardContent>
