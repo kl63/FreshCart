@@ -105,6 +105,7 @@ export default function AdminProducts() {
           try {
             const error = await response.json()
             console.error('❌ Delete failed with error:', error)
+            console.error('❌ Full error details:', JSON.stringify(error, null, 2))
             
             // Extract detailed error message
             if (error.detail) {
