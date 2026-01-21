@@ -174,7 +174,7 @@ export default function CategoryGrid() {
                       
                       <div className="mt-auto">
                         <div className={`bg-gradient-to-r ${gradient} text-white text-xs px-3 py-1.5 rounded-full font-medium shadow-md group-hover:shadow-lg transition-shadow duration-300 text-center`}>
-                          {productCounts[category.id] || 0} products
+                          {`${productCounts[category.id] || 0} products`}
                         </div>
                       </div>
                     </CardContent>
