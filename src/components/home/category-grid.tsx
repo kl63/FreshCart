@@ -44,6 +44,8 @@ export default function CategoryGrid() {
         })
         
         console.log('📊 Product counts by category:', counts)
+        console.log('📊 Fetched categories:', fetchedCategories.map(c => ({ id: c.id, name: c.name })))
+        console.log('📊 First 8 category IDs to display:', fetchedCategories.slice(0, 8).map(c => c.id))
         setProductCounts(counts)
         // Show first 8 categories for home page
         setCategories(fetchedCategories.slice(0, 8))
