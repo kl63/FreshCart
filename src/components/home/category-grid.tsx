@@ -44,11 +44,21 @@ export default function CategoryGrid() {
         })
         
         console.log('📊 Product counts by category:', counts)
-        console.log('📊 Fetched categories:', fetchedCategories.map(c => ({ id: c.id, name: c.name })))
-        console.log('📊 First 8 category IDs to display:', fetchedCategories.slice(0, 8).map(c => c.id))
+        
+        // Filter categories to only show ones with products, sorted by product count
+        const categoriesWithProducts = fetchedCategories
+          .filter(cat => counts[cat.id] && counts[cat.id] > 0)
+          .sort((a, b) => (counts[b.id] || 0) - (counts[a.id] || 0))
+          .slice(0, 8)
+        
+        console.log('📊 Categories with products:', categoriesWithProducts.map(c => ({ 
+          id: c.id, 
+          name: c.name, 
+          count: counts[c.id] 
+        })))
+        
         setProductCounts(counts)
-        // Show first 8 categories for home page
-        setCategories(fetchedCategories.slice(0, 8))
+        setCategories(categoriesWithProducts)
       } catch (err) {
         setError('Failed to load categories')
         console.error('Error loading categories:', err)
