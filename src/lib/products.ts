@@ -37,11 +37,15 @@ export async function fetchProducts(filters: ProductFilters = {}): Promise<Produ
     if (filters.min_price !== undefined) params.set('min_price', filters.min_price.toString())
     if (filters.max_price !== undefined) params.set('max_price', filters.max_price.toString())
     if (filters.search) params.set('search', filters.search)
+    
+    // Add timestamp to bypass CDN and browser cache
+    params.set('_t', Date.now().toString())
 
     const response = await fetch(`/api/products?${params.toString()}`, {
       headers: {
         'accept': 'application/json',
       },
+      cache: 'no-store'
     })
 
     if (!response.ok) {

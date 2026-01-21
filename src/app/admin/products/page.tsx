@@ -46,12 +46,16 @@ export default function AdminProducts() {
   const loadProducts = async () => {
     try {
       setLoading(true)
+      // Add timestamp to bust cache on deployed sites
+      const timestamp = Date.now()
+      console.log('🔄 Loading products with cache-bust timestamp:', timestamp)
       const [productsData, categoriesData] = await Promise.all([
         fetchProducts({ limit: 100 }),
         fetchAllCategories()
       ])
       setProducts(productsData)
       setCategories(categoriesData)
+      console.log('✅ Products loaded:', productsData.length)
     } catch (error) {
       console.error('Error loading products:', error)
     } finally {
