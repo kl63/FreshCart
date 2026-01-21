@@ -61,7 +61,14 @@ export async function PUT(
     if (contentType && contentType.includes('application/json')) {
       const data = await response.json()
       console.log('API Proxy: Backend response data:', data)
-      return NextResponse.json(data, { status: response.status })
+      return NextResponse.json(data, { 
+        status: response.status,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'CDN-Cache-Control': 'no-store',
+          'Vercel-CDN-Cache-Control': 'no-store'
+        }
+      })
     } else {
       // Non-JSON response (likely HTML error page)
       const text = await response.text()

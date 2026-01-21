@@ -12,7 +12,7 @@ const heroSlides = [
     title: 'Fresh Groceries Delivered',
     subtitle: 'Get the freshest produce and quality groceries delivered to your doorstep',
     ctaText: 'Shop Now',
-    ctaLink: '/categories/produce',
+    ctaLink: '/products',
     image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&h=600&auto=format&fit=crop',
     bgColor: 'from-green-600 to-green-700'
   },
@@ -21,7 +21,7 @@ const heroSlides = [
     title: 'Organic & Natural',
     subtitle: 'Discover our wide selection of certified organic and natural products',
     ctaText: 'Shop Organic',
-    ctaLink: '/categories/organic',
+    ctaLink: '/products',
     image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1200&h=600&auto=format&fit=crop',
     bgColor: 'from-emerald-600 to-emerald-700'
   },
@@ -29,8 +29,8 @@ const heroSlides = [
     id: 3,
     title: 'Same-Day Delivery',
     subtitle: 'Order before 2 PM and get your groceries delivered the same day',
-    ctaText: 'Learn More',
-    ctaLink: '/delivery',
+    ctaText: 'Shop Now',
+    ctaLink: '/products',
     image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1200&h=600&auto=format&fit=crop',
     bgColor: 'from-green-700 to-green-800'
   }
