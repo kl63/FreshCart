@@ -25,13 +25,25 @@ export default function CategoryGrid() {
         
         // Calculate actual product counts by category
         const counts: Record<string, number> = {}
+        console.log('📊 Calculating product counts. Total products:', products.length)
         products.forEach(product => {
+          let categoryId: string | null = null
+          
+          // Check if product has category object
           if (product.category && typeof product.category === 'object') {
-            const categoryId = product.category.id
+            categoryId = product.category.id
+          } 
+          // Fallback to category_id field
+          else if (product.category_id) {
+            categoryId = product.category_id
+          }
+          
+          if (categoryId) {
             counts[categoryId] = (counts[categoryId] || 0) + 1
           }
         })
         
+        console.log('📊 Product counts by category:', counts)
         setProductCounts(counts)
         // Show first 8 categories for home page
         setCategories(fetchedCategories.slice(0, 8))
