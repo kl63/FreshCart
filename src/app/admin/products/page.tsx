@@ -302,9 +302,15 @@ export default function AdminProducts() {
 
         if (response.ok) {
           console.log('✅ Update succeeded!')
-          // Always refetch to ensure we have the latest data
-          console.log('🔄 Refetching all products to ensure fresh data...')
-          await loadProducts()
+          // Update the specific product in the list with the response data (includes category)
+          if (responseData && responseData.id) {
+            console.log('📦 Updating product in local state with full data including category')
+            setProducts(products.map(p => p.id === editingProduct.id ? responseData : p))
+          } else {
+            // Fallback: refetch all if response is empty
+            console.log('🔄 Refetching all products as fallback...')
+            await loadProducts()
+          }
           toast.success('Product updated successfully')
           setShowModal(false)
         } else {
