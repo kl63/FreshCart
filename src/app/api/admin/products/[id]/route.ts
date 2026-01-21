@@ -92,6 +92,11 @@ export async function DELETE(
     const { id } = await params
     const token = request.headers.get('authorization')
 
+    console.log('=== DELETE Product Request ===')
+    console.log('Product ID:', id)
+    console.log('Token present:', !!token)
+    console.log('API URL:', `${API_BASE_URL}/products/${id}`)
+
     const response = await fetch(`${API_BASE_URL}/products/${id}`, {
       method: 'DELETE',
       headers: {
@@ -99,16 +104,39 @@ export async function DELETE(
       },
     })
 
+    console.log('=== DELETE Response ===')
+    console.log('Status:', response.status)
+    console.log('Status Text:', response.statusText)
+
     if (response.status === 204) {
+      console.log('✅ Product deleted successfully (204 No Content)')
       return new NextResponse(null, { status: 204 })
     }
 
-    const data = await response.json()
-    return NextResponse.json(data, { status: response.status })
+    // Try to parse error response
+    const contentType = response.headers.get('content-type')
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json()
+      console.log('❌ Backend error response:', data)
+      return NextResponse.json(data, { status: response.status })
+    } else {
+      const text = await response.text()
+      console.error('❌ Non-JSON response:', text.substring(0, 500))
+      return NextResponse.json(
+        { 
+          error: 'Backend returned non-JSON response',
+          detail: text.substring(0, 200)
+        },
+        { status: response.status }
+      )
+    }
   } catch (error) {
-    console.error('Error deleting product:', error)
+    console.error('❌ Error deleting product:', error)
     return NextResponse.json(
-      { error: 'Failed to delete product' },
+      { 
+        error: 'Failed to delete product',
+        detail: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

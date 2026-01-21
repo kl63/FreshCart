@@ -83,6 +83,9 @@ export default function AdminProducts() {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
         const token = localStorage.getItem('token')
+        
+        console.log('🗑️ Attempting to delete product:', productId)
+        
         const response = await fetch(`/api/admin/products/${productId}`, {
           method: 'DELETE',
           headers: {
@@ -90,15 +93,48 @@ export default function AdminProducts() {
           }
         })
 
+        console.log('Delete response status:', response.status)
+
         if (response.ok || response.status === 204) {
           setProducts(products.filter(p => p.id !== productId))
           toast.success('Product deleted successfully')
+          console.log('✅ Product deleted successfully')
         } else {
-          const error = await response.json()
-          toast.error(`Failed to delete product: ${error.detail || error.error || 'Unknown error'}`)
+          let errorMessage = 'Unknown error'
+          
+          try {
+            const error = await response.json()
+            console.error('❌ Delete failed with error:', error)
+            
+            // Extract detailed error message
+            if (error.detail) {
+              if (typeof error.detail === 'string') {
+                errorMessage = error.detail
+              } else if (Array.isArray(error.detail)) {
+                errorMessage = error.detail.map((e: any) => e.msg || e).join(', ')
+              } else {
+                errorMessage = JSON.stringify(error.detail)
+              }
+            } else if (error.error) {
+              errorMessage = error.error
+            }
+            
+            // Check for common database constraint errors
+            if (errorMessage.toLowerCase().includes('foreign key') || 
+                errorMessage.toLowerCase().includes('constraint') ||
+                errorMessage.toLowerCase().includes('referenced')) {
+              errorMessage = 'Cannot delete: Product is referenced in existing orders. Please archive it instead.'
+            }
+          } catch (parseError) {
+            console.error('Failed to parse error response:', parseError)
+          }
+          
+          toast.error(`Failed to delete product: ${errorMessage}`, {
+            duration: 5000
+          })
         }
       } catch (error) {
-        console.error('Error deleting product:', error)
+        console.error('❌ Error deleting product:', error)
         toast.error(`Error deleting product: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }
