@@ -107,6 +107,7 @@ export default function CategoryGrid() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {categories.map((category, index) => {
+              console.log(`🎨 Rendering ${category.name}: productCounts[${category.id}] =`, productCounts[category.id])
               // Create gradient colors based on category index
               const gradients = [
                 'from-green-400 to-blue-500',
