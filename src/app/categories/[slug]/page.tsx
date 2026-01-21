@@ -51,6 +51,8 @@ export default function CategoryPage({ params }: CategoryPageProps) {
         
         // Fetch products for this category
         const categoryProducts = await fetchProductsByCategory(foundCategory.id)
+        console.log(`📦 Category "${foundCategory.name}" (${foundCategory.id}): Found ${categoryProducts.length} products`)
+        console.log('📦 Products:', categoryProducts.map(p => ({ id: p.id, name: p.name, category: p.category })))
         setProducts(categoryProducts)
       } catch (err) {
         console.error('Error loading category data:', err)
