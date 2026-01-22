@@ -68,38 +68,14 @@ export default function AdminOrdersPage() {
         return
       }
 
-      // Try different endpoints for admin to see all orders
-      let response = await fetch('https://fastapi.kevinlinportfolio.com/api/v1/orders/all', {
+      // Backend automatically returns all orders for admin users
+      const response = await fetch('https://fastapi.kevinlinportfolio.com/api/v1/orders/', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       })
-
-      // If /orders/all doesn't work, try /orders/?all=true
-      if (!response.ok && response.status === 404) {
-        console.log('/orders/all not found, trying /orders/?all=true')
-        response = await fetch('https://fastapi.kevinlinportfolio.com/api/v1/orders/?all=true', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        })
-      }
-
-      // If that doesn't work, try just /orders/ (might return all for admin users)
-      if (!response.ok && response.status === 404) {
-        console.log('/orders/?all=true not found, trying /orders/')
-        response = await fetch('https://fastapi.kevinlinportfolio.com/api/v1/orders/', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        })
-      }
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -108,8 +84,8 @@ export default function AdminOrdersPage() {
       }
 
       const ordersData = await response.json()
-      console.log('Raw orders data from API:', ordersData)
-      console.log('Number of orders fetched:', ordersData.length)
+      console.log('Admin orders fetched:', ordersData.length, 'orders')
+      console.log('Raw orders data:', ordersData)
       
       // Fetch user details for each order
       const ordersWithUserData = await Promise.all(
