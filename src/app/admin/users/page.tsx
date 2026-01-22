@@ -93,6 +93,36 @@ export default function AdminUsersPage() {
       const apiUsers = await response.json()
       console.log('Users fetched from API:', apiUsers)
       
+      // Fetch all orders to calculate order counts and totals
+      let ordersData: any[] = []
+      try {
+        const ordersResponse = await fetch('https://fastapi.kevinlinportfolio.com/api/v1/orders/', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'accept': 'application/json'
+          }
+        })
+        
+        if (ordersResponse.ok) {
+          ordersData = await ordersResponse.json()
+          console.log('Orders fetched for user stats:', ordersData.length)
+        }
+      } catch (e) {
+        console.error('Failed to fetch orders for user stats:', e)
+      }
+      
+      // Calculate orders count and total spent per user
+      const userOrderStats = ordersData.reduce((acc: any, order: any) => {
+        const userId = order.user_id
+        if (!acc[userId]) {
+          acc[userId] = { count: 0, total: 0 }
+        }
+        acc[userId].count++
+        acc[userId].total += order.total_amount || 0
+        return acc
+      }, {})
+      
       // Transform API data to match our User interface
       const transformedUsers: User[] = apiUsers.map((apiUser: any) => ({
         id: apiUser.id,
@@ -109,8 +139,8 @@ export default function AdminUsersPage() {
         updated_at: apiUser.updated_at,
         last_login: apiUser.last_login,
         full_name: apiUser.full_name,
-        orders_count: 0, // TODO: Fetch from orders API
-        total_spent: 0 // TODO: Calculate from orders
+        orders_count: userOrderStats[apiUser.id]?.count || 0,
+        total_spent: userOrderStats[apiUser.id]?.total || 0
       }))
       
       setUsers(transformedUsers)
