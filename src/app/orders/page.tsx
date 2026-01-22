@@ -1,45 +1,22 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useRouter } from 'next/navigation'
 import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 
-const mockOrders = [
-  {
-    id: '12345',
-    date: '2024-12-15',
-    status: 'delivered',
-    items: 5,
-    total: 47.82,
-    deliveryAddress: '123 Main St, Anytown, ST 12345'
-  },
-  {
-    id: '12344',
-    date: '2024-12-12',
-    status: 'delivered',
-    items: 8,
-    total: 63.45,
-    deliveryAddress: '123 Main St, Anytown, ST 12345'
-  },
-  {
-    id: '12343',
-    date: '2024-12-08',
-    status: 'cancelled',
-    items: 3,
-    total: 28.99,
-    deliveryAddress: '123 Main St, Anytown, ST 12345'
-  },
-  {
-    id: '12342',
-    date: '2024-12-05',
-    status: 'delivered',
-    items: 12,
-    total: 89.76,
-    deliveryAddress: '123 Main St, Anytown, ST 12345'
-  }
-]
+interface Order {
+  id: string
+  order_number: string
+  status: string
+  total_amount: number
+  created_at: string
+  items?: any[]
+  order_items?: any[]
+  shipping_address?: any
+}
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -58,6 +35,59 @@ const getStatusBadge = (status: string) => {
 
 export default function OrdersPage() {
   const router = useRouter()
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchOrders()
+  }, [])
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('token')
+      
+      if (!token) {
+        console.error('No authentication token found')
+        setOrders([])
+        return
+      }
+
+      const response = await fetch('https://fastapi.kevinlinportfolio.com/api/v1/orders/my-orders', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const ordersData = await response.json()
+      console.log('Customer orders data:', ordersData)
+      setOrders(ordersData)
+    } catch (error) {
+      console.error('Error fetching orders:', error)
+      setOrders([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+            <div className="h-64 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -99,64 +129,81 @@ export default function OrdersPage() {
 
         {/* Orders List */}
         <div className="space-y-4">
-          {mockOrders.map((order) => (
-            <Card key={order.id}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold">Order #{order.id}</h3>
-                    <p className="text-sm text-gray-600">
-                      Placed on {new Date(order.date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </p>
-                  </div>
-                  {getStatusBadge(order.status)}
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <p className="text-sm text-gray-600">Items</p>
-                    <p className="font-medium">{order.items} items</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Total</p>
-                    <p className="font-medium">${order.total.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Delivery Address</p>
-                    <p className="font-medium text-sm">{order.deliveryAddress}</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" size="sm">
-                    View Details
-                  </Button>
-                  {order.status === 'delivered' && (
-                    <>
-                      <Button variant="outline" size="sm">
-                        Reorder
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        Leave Review
-                      </Button>
-                    </>
-                  )}
-                  {order.status === 'preparing' && (
-                    <Button variant="outline" size="sm">
-                      Track Order
-                    </Button>
-                  )}
-                  <Button variant="outline" size="sm">
-                    Download Receipt
-                  </Button>
-                </div>
+          {orders.length === 0 ? (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <p className="text-gray-600">No orders found</p>
               </CardContent>
             </Card>
-          ))}
+          ) : (
+            orders.map((order) => {
+              const itemsCount = order.items?.length || order.order_items?.length || 0
+              const deliveryAddress = order.shipping_address 
+                ? `${order.shipping_address.street || order.shipping_address.address_line_1 || ''}, ${order.shipping_address.city || ''}, ${order.shipping_address.state || ''} ${order.shipping_address.zip_code || order.shipping_address.postal_code || ''}`
+                : 'Address not available'
+              
+              return (
+                <Card key={order.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">{order.order_number}</h3>
+                        <p className="text-sm text-gray-600">
+                          Placed on {new Date(order.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      {getStatusBadge(order.status)}
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-4 mb-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Items</p>
+                        <p className="font-medium">{itemsCount} items</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Total</p>
+                        <p className="font-medium">${order.total_amount.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Delivery Address</p>
+                        <p className="font-medium text-sm">{deliveryAddress}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" size="sm" onClick={() => router.push(`/order/${order.id}`)}>
+                        View Details
+                      </Button>
+                      {order.status === 'delivered' && (
+                        <>
+                          <Button variant="outline" size="sm">
+                            Reorder
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            Leave Review
+                          </Button>
+                        </>
+                      )}
+                      {(order.status === 'preparing' || order.status === 'shipped') && (
+                        <Button variant="outline" size="sm">
+                          Track Order
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm">
+                        Download Receipt
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })
+          )}
         </div>
 
         {/* Load More */}
