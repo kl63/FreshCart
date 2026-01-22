@@ -191,8 +191,9 @@ export default function AdminOrdersPage() {
 
       console.log(`Updating order ${orderId} status to ${newStatus}`)
 
-      const response = await fetch(`https://fastapi.kevinlinportfolio.com/api/v1/orders/${orderId}`, {
-        method: 'PATCH',
+      // Try status-specific endpoint first, fallback to PUT if needed
+      const response = await fetch(`https://fastapi.kevinlinportfolio.com/api/v1/orders/${orderId}/status`, {
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
