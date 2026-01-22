@@ -68,7 +68,8 @@ export default function AdminOrdersPage() {
         return
       }
 
-      const response = await fetch('https://fastapi.kevinlinportfolio.com/api/v1/orders/', {
+      // Admin should see all orders, try /admin/orders or /orders/all
+      const response = await fetch('https://fastapi.kevinlinportfolio.com/api/v1/admin/orders', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
