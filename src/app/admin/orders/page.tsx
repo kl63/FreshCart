@@ -81,18 +81,55 @@ export default function AdminOrdersPage() {
       }
 
       const ordersData = await response.json()
-      console.log('Orders data:', ordersData)
+      console.log('Raw orders data from API:', ordersData)
       
-      // Transform API data to include display fields
-      const transformedOrders = ordersData.map((order: Partial<Order>) => ({
-        ...order,
-        customer_name: 'Customer', // TODO: Fetch from user API
-        customer_email: 'customer@example.com', // TODO: Fetch from user API
-        items_count: 0, // TODO: Calculate from order items
-        payment_method: 'Unknown' // TODO: Add to API
-      }))
+      // Fetch user details for each order
+      const ordersWithUserData = await Promise.all(
+        ordersData.map(async (order: any) => {
+          let customerName = 'Unknown Customer'
+          let customerEmail = 'unknown@example.com'
+          let itemsCount = 0
+          
+          // Fetch user data
+          try {
+            const userResponse = await fetch(
+              `https://fastapi.kevinlinportfolio.com/api/v1/users/${order.user_id}`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+              }
+            )
+            
+            if (userResponse.ok) {
+              const userData = await userResponse.json()
+              customerName = userData.full_name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || 'Customer'
+              customerEmail = userData.email || 'customer@example.com'
+            }
+          } catch (e) {
+            console.error(`Failed to fetch user ${order.user_id}:`, e)
+          }
+          
+          // Get items count from order items
+          if (order.items && Array.isArray(order.items)) {
+            itemsCount = order.items.length
+          } else if (order.order_items && Array.isArray(order.order_items)) {
+            itemsCount = order.order_items.length
+          }
+          
+          return {
+            ...order,
+            customer_name: customerName,
+            customer_email: customerEmail,
+            items_count: itemsCount,
+            payment_method: order.payment_method || order.payment_intent_id ? 'Card' : 'Unknown'
+          }
+        })
+      )
       
-      setOrders(transformedOrders)
+      console.log('Transformed orders with user data:', ordersWithUserData)
+      setOrders(ordersWithUserData)
     } catch (error) {
       console.error('Error fetching orders:', error)
       setOrders([])
