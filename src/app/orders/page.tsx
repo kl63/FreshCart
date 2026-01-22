@@ -149,13 +149,19 @@ export default function OrdersPage() {
                       <div>
                         <h3 className="text-lg font-semibold">{order.order_number}</h3>
                         <p className="text-sm text-gray-600">
-                          Placed on {new Date(order.created_at).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                          Placed on {(() => {
+                            const date = order.created_at.endsWith('Z') 
+                              ? new Date(order.created_at) 
+                              : new Date(order.created_at + 'Z')
+                            return date.toLocaleString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true
+                            })
+                          })()}
                         </p>
                       </div>
                       {getStatusBadge(order.status)}

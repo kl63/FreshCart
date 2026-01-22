@@ -192,12 +192,15 @@ export default function AdminOrdersPage() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    // Ensure the date string is treated as UTC if it doesn't have timezone info
+    const date = dateString.endsWith('Z') ? new Date(dateString) : new Date(dateString + 'Z')
+    return date.toLocaleString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: true
     })
   }
 
