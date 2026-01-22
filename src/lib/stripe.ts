@@ -1,9 +1,14 @@
 import { loadStripe } from '@stripe/stripe-js';
 
 // Replace with your Stripe PUBLISHABLE key (safe to expose)
-export const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
-);
+const stripeKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+
+if (!stripeKey) {
+  console.error('❌ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set in environment variables');
+  console.error('⚠️  Stripe will not work. Please add the key to your deployment platform.');
+}
+
+export const stripePromise = stripeKey ? loadStripe(stripeKey) : null;
 
 // API Configuration
 const PRODUCTION_API = 'https://fastapi.kevinlinportfolio.com/api/v1';

@@ -349,7 +349,19 @@ export default function AdminProducts() {
           }
         } else {
           console.error('Create failed:', responseData)
-          toast.error(`Failed to create product: ${responseData.error || 'Unknown error'}`)
+          // Show detailed error including preview if backend returned non-JSON
+          const errorMsg = responseData.error || 'Unknown error'
+          const statusCode = responseData.status || response.status
+          const preview = responseData.preview ? `\n\nBackend response preview:\n${responseData.preview}` : ''
+          
+          console.error('Full error details:', {
+            error: errorMsg,
+            status: statusCode,
+            preview: responseData.preview,
+            fullResponse: responseData
+          })
+          
+          toast.error(`Failed to create product (${statusCode}): ${errorMsg}${preview}`)
         }
       }
     } catch (error) {

@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     console.log('API Proxy: Creating product')
     console.log('API Proxy: Request body:', body)
     console.log('API Proxy: Token present:', !!token)
+    console.log('API Proxy: Token value:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN')
 
     const response = await fetch(`${API_BASE_URL}/products/`, {
       method: 'POST',
@@ -48,6 +49,7 @@ export async function POST(request: NextRequest) {
     })
 
     console.log('API Proxy: Backend response status:', response.status)
+    console.log('API Proxy: Content-Type:', response.headers.get('content-type'))
     
     // Check if response is JSON
     const contentType = response.headers.get('content-type')
@@ -58,12 +60,17 @@ export async function POST(request: NextRequest) {
     } else {
       // Non-JSON response (likely HTML error page)
       const text = await response.text()
-      console.error('API Proxy: Backend returned non-JSON:', text.substring(0, 500))
+      console.error('❌ API Proxy: Backend returned non-JSON!')
+      console.error('Status Code:', response.status)
+      console.error('Content-Type:', contentType)
+      console.error('Full response text (first 1000 chars):', text.substring(0, 1000))
+      
       return NextResponse.json(
         { 
           error: 'Backend returned non-JSON response',
           status: response.status,
-          preview: text.substring(0, 200)
+          preview: text.substring(0, 500),
+          contentType: contentType
         },
         { status: response.status || 500 }
       )
