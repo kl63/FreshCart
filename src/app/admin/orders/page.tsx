@@ -182,12 +182,39 @@ export default function AdminOrdersPage() {
 
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {
     try {
-      // TODO: Replace with actual API call
+      const token = localStorage.getItem('token')
+      
+      if (!token) {
+        console.error('No authentication token found')
+        return
+      }
+
+      console.log(`Updating order ${orderId} status to ${newStatus}`)
+
+      const response = await fetch(`https://fastapi.kevinlinportfolio.com/api/v1/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || 'Failed to update order status')
+      }
+
+      const updatedOrder = await response.json()
+      console.log('Order status updated successfully:', updatedOrder)
+
+      // Update local state with the response from backend
       setOrders(orders.map(order => 
         order.id === orderId ? { ...order, status: newStatus } : order
       ))
     } catch (error) {
       console.error('Error updating order status:', error)
+      alert(`Failed to update order status: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
