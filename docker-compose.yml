@@ -1,40 +1,35 @@
 services:
   freshcart-app:
-    image: ghcr.io/kl63/freshcart:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     container_name: freshcart-app
     restart: unless-stopped
 
-    # ✅ Don’t expose the app directly to the internet
-    # Remove ports and only "expose" internally
-    expose:
-      - "3000"
+    # 🔒 Only allow Nginx on the same server to reach it
+    ports:
+      - "127.0.0.1:4000:3000"
 
+    env_file:
+      - .env
     environment:
       NODE_ENV: "production"
-      NEXT_PUBLIC_API_URL: "${NEXT_PUBLIC_API_URL}"
-      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}"
 
-    # ✅ Container hardening
     security_opt:
       - no-new-privileges:true
+
+    # Optional hardening (remove if your app crashes)
     read_only: true
     tmpfs:
       - /tmp
       - /var/tmp
 
-    # ✅ Resource protection (helps survive spikes / abuse)
-    # Note: deploy.* is fully enforced in Docker Swarm; with docker compose it may be partially enforced.
-    deploy:
-      resources:
-        limits:
-          cpus: "1.00"
-          memory: "768M"
-        reservations:
-          memory: "256M"
-    oom_kill_disable: false
+    # Keep only ONE PID limiter (this one)
     pids_limit: 200
 
-    # ✅ Healthcheck stays internal
     healthcheck:
       test:
         [
@@ -48,18 +43,8 @@ services:
       retries: 3
       start_period: 40s
 
-    # ✅ Logging limits (prevents disk fill during attack)
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-
-    # ✅ Attach to a private “edge” network that only your proxy can access
-    networks:
-      - edge
-
-networks:
-  edge:
-    driver: bridge
-    internal: true
