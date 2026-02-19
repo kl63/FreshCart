@@ -81,8 +81,14 @@ jobs:
             echo "🔧 Configuring git safe directory..."
             git config --global --add safe.directory /var/www/FreshCart
             
+            echo "💾 Stashing any local changes..."
+            git stash
+            
             echo "⬇️ Pulling latest code from GitHub..."
             git pull origin main
+            
+            echo "♻️ Reapplying local changes if any..."
+            git stash pop || true
             
             echo "🔄 Rebuilding and restarting containers..."
             docker compose down
