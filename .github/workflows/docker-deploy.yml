@@ -75,8 +75,11 @@ jobs:
           ssh $USERNAME@$HOST << 'EOF'
             set -e
             
-            echo "� Navigating to project directory..."
+            echo "📂 Navigating to project directory..."
             cd /var/www/FreshCart
+            
+            echo "🔧 Configuring git safe directory..."
+            git config --global --add safe.directory /var/www/FreshCart
             
             echo "⬇️ Pulling latest code from GitHub..."
             git pull origin main
