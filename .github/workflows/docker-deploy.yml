@@ -71,25 +71,19 @@ jobs:
         env:
           HOST: ${{ secrets.DROPLET_IP }}
           USERNAME: ${{ secrets.DROPLET_USERNAME }}
-          REGISTRY: ${{ env.REGISTRY }}
-          IMAGE: ${{ env.IMAGE_NAME }}
         run: |
           ssh $USERNAME@$HOST << 'EOF'
             set -e
             
-            echo "🔑 Logging into GitHub Container Registry..."
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            
-            echo "⬇️ Pulling latest Docker image..."
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest
-            
-            echo "🔄 Stopping and removing old container..."
-            docker stop freshcart-app || true
-            docker rm freshcart-app || true
-            
-            echo "🚀 Starting new container..."
+            echo "� Navigating to project directory..."
             cd /var/www/FreshCart
-            docker compose up -d
+            
+            echo "⬇️ Pulling latest code from GitHub..."
+            git pull origin main
+            
+            echo "🔄 Rebuilding and restarting containers..."
+            docker compose down
+            docker compose up -d --build
             
             echo "🧹 Cleaning up old images..."
             docker image prune -af --filter "until=24h"
