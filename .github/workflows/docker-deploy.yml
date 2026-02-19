@@ -79,14 +79,14 @@ jobs:
             cd /var/www/FreshCart
             
             echo "🔧 Configuring git safe directory..."
-            git config --global --add safe.directory /var/www/FreshCart
+            sudo git config --global --add safe.directory /var/www/FreshCart
             
             echo "⬇️ Pulling latest code from GitHub..."
-            git pull origin main
+            sudo git pull origin main
             
             echo "🔄 Rebuilding and restarting containers..."
-            docker compose down
-            docker compose up -d --build
+            sudo docker compose down
+            sudo docker compose up -d --build
             
             echo "🧹 Cleaning up old images..."
             docker image prune -af --filter "until=24h"
