@@ -21,6 +21,9 @@ export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [sortBy, setSortBy] = useState('name')
@@ -50,16 +53,35 @@ export default function AdminProducts() {
       const timestamp = Date.now()
       console.log('🔄 Loading products with cache-bust timestamp:', timestamp)
       const [productsData, categoriesData] = await Promise.all([
-        fetchProducts({ limit: 100 }),
+        fetchProducts({ limit: 100, page: 1 }),
         fetchAllCategories()
       ])
       setProducts(productsData)
       setCategories(categoriesData)
+      setCurrentPage(1)
+      setHasMore(productsData.length === 100)
       console.log('✅ Products loaded:', productsData.length)
     } catch (error) {
       console.error('Error loading products:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadMore = async () => {
+    try {
+      setLoadingMore(true)
+      const nextPage = currentPage + 1
+      console.log('🔄 Loading more products, page:', nextPage)
+      const moreProducts = await fetchProducts({ limit: 100, page: nextPage })
+      setProducts(prev => [...prev, ...moreProducts])
+      setCurrentPage(nextPage)
+      setHasMore(moreProducts.length === 100)
+      console.log('✅ More products loaded:', moreProducts.length)
+    } catch (error) {
+      console.error('Error loading more products:', error)
+    } finally {
+      setLoadingMore(false)
     }
   }
 
@@ -592,6 +614,35 @@ export default function AdminProducts() {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          {/* Load More Button */}
+          {hasMore && !loading && (
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+              >
+                {loadingMore ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Loading...</span>
+                  </>
+                ) : (
+                  <span>Load More Products (Page {currentPage + 1})</span>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Showing count */}
+          <div className="text-center mt-4 text-sm text-gray-600">
+            Showing {sortedProducts.length} of {products.length} loaded products
+            {hasMore && ' (more available)'}
           </div>
 
           {sortedProducts.length === 0 && (

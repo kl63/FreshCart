@@ -5,7 +5,7 @@ const teamMembers = [
   {
     name: 'Sarah Johnson',
     role: 'Founder & CEO',
-    image: 'https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=300&h=300&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=300&auto=format&fit=crop',
     bio: 'Passionate about bringing fresh, quality groceries to every household.'
   },
   {
@@ -146,6 +146,7 @@ export default function AboutPage() {
                       width={96}
                       height={96}
                       className="w-full h-full object-cover"
+                      unoptimized
                     />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-1">

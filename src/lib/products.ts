@@ -49,7 +49,11 @@ export async function fetchProducts(filters: ProductFilters = {}): Promise<Produ
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch products: ${response.status}`)
+      const errorText = await response.text()
+      console.error('❌ API Error Response:', errorText)
+      console.error('❌ API Status:', response.status)
+      console.error('❌ API URL:', `/api/products?${params.toString()}`)
+      throw new Error(`Failed to fetch products: ${response.status} - ${errorText}`)
     }
 
     const products: Product[] = await response.json()

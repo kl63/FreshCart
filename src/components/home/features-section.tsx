@@ -1,58 +1,69 @@
-import { TruckIcon, ClockIcon, ShieldCheckIcon, HeartIcon } from '@heroicons/react/24/outline'
+import { Truck, ShieldCheck, Leaf, Sprout } from 'lucide-react'
+import { Card } from '@/components/ui/card'
 
 const features = [
   {
-    icon: TruckIcon,
+    icon: <Truck className="w-8 h-8" />,
     title: 'Free Delivery',
     description: 'Free delivery on orders over $35. Same-day delivery available in select areas.',
-    color: 'text-green-600'
+    color: 'bg-blue-500/10 text-blue-600'
   },
   {
-    icon: ClockIcon,
+    icon: <ShieldCheck className="w-8 h-8" />,
     title: 'Quality Guaranteed',
     description: 'Supporting local communities and farmers is at the heart of everything we do. Your money back.',
-    color: 'text-blue-600'
+    color: 'bg-green-500/10 text-green-600'
   },
   {
-    icon: ShieldCheckIcon,
+    icon: <Leaf className="w-8 h-8" />,
     title: 'Sustainability Assured',
     description: 'Every product is carefully selected and quality-checked before reaching your doorstep.',
-    color: 'text-purple-600'
+    color: 'bg-emerald-500/10 text-emerald-600'
   },
   {
-    icon: HeartIcon,
+    icon: <Sprout className="w-8 h-8" />,
     title: 'Organic Options',
     description: 'Committed to eco-friendly practices and reducing our environmental footprint. Wide selection of certified organic and natural products for healthy living.',
-    color: 'text-red-600'
+    color: 'bg-amber-500/10 text-amber-600'
   }
 ]
 
 export default function FeaturesSection() {
   return (
-    <section className="py-16 bg-green-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+    <section className="w-full py-16 px-4 bg-gradient-to-b from-white to-green-50">
+      <div className="max-w-7xl mx-auto">
+        {/* Hero Section */}
+        <div className="text-center mb-12 space-y-4">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight">
             Why Choose FreshCart?
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
             We&apos;re committed to bringing you the freshest groceries with unmatched convenience
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => (
-            <div key={index} className="text-center group">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-lg mb-6 group-hover:shadow-xl transition-shadow duration-300">
-                <feature.icon className={`h-8 w-8 ${feature.color}`} />
+            <Card 
+              key={index}
+              className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-gray-200 bg-white p-0 gap-0 overflow-hidden"
+            >
+              {/* Icon Container - No padding at top */}
+              <div className={`w-full h-32 ${feature.color} flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
+                {feature.icon}
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                {feature.title}
-              </h3>
-              <p className="text-gray-600 leading-relaxed">
-                {feature.description}
-              </p>
-            </div>
+
+              {/* Content - With padding */}
+              <div className="p-6 space-y-2">
+                <h3 className="text-xl font-semibold text-gray-900">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            </Card>
           ))}
         </div>
       </div>

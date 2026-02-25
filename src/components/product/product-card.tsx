@@ -46,7 +46,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
 
 
   return (
-    <Card className={`group hover:shadow-lg transition-all duration-300 overflow-hidden ${className}`}>
+    <Card className={`group hover:shadow-lg transition-all duration-300 overflow-hidden p-0 ${className}`}>
       <Link href={`/products/${product.id}`}>
         <div className="relative">
           {/* Product Image */}
@@ -117,7 +117,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
           )}
         </div>
 
-        <CardContent className="p-4">
+        <CardContent className="p-4 px-4">
           {/* Product Info */}
           <div className="space-y-2">
             {/* Category */}

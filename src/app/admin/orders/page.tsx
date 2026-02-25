@@ -27,6 +27,21 @@ interface Order {
   customer_email?: string
 }
 
+interface OrderItem {
+  product_id: string
+  product_name: string
+  product_sku: string
+  quantity: number
+  unit_price: number
+}
+
+interface OrderDetails extends Order {
+  items: OrderItem[]
+  subtotal?: number
+  tax?: number
+  shipping?: number
+}
+
 const statusColors = {
   pending: 'bg-yellow-100 text-yellow-800',
   confirmed: 'bg-blue-100 text-blue-800',
@@ -52,6 +67,9 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'date' | 'amount' | 'status'>('date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState<OrderDetails | null>(null)
+  const [loadingDetails, setLoadingDetails] = useState(false)
 
   useEffect(() => {
     fetchOrders()
@@ -177,10 +195,50 @@ export default function AdminOrdersPage() {
       }
     })
 
-  const viewOrderDetails = (orderId: string) => {
-    const order = orders.find(o => o.id === orderId)
-    if (order) {
-      alert(`Order Details:\n\nOrder Number: ${order.order_number}\nCustomer: ${order.customer_name || 'Unknown'}\nEmail: ${order.customer_email || 'Unknown'}\nTotal: $${order.total_amount.toFixed(2)}\nStatus: ${order.status}\nCreated: ${new Date(order.created_at).toLocaleDateString()}\nItems: ${order.items_count || 0}\nPayment: ${order.payment_method || 'Unknown'}`)
+  const viewOrderDetails = async (orderId: string) => {
+    try {
+      setLoadingDetails(true)
+      setShowDetailsModal(true)
+      
+      const token = localStorage.getItem('token')
+      if (!token) {
+        console.error('No authentication token found')
+        return
+      }
+
+      const response = await fetch(`https://fastapi.kevinlinportfolio.com/api/v1/orders/${orderId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('API Error:', errorText)
+        throw new Error(`Failed to fetch order details: ${response.status}`)
+      }
+
+      const orderData = await response.json()
+      console.log('✅ Order details fetched:', orderData)
+      
+      const order = orders.find(o => o.id === orderId)
+      
+      const orderDetails: OrderDetails = {
+        ...orderData,
+        customer_name: order?.customer_name || 'Unknown',
+        customer_email: order?.customer_email || 'Unknown',
+        items: orderData.items || []
+      }
+      
+      setSelectedOrderDetails(orderDetails)
+    } catch (error) {
+      console.error('Error fetching order details:', error)
+      alert('Failed to load order details. Please try again.')
+      setShowDetailsModal(false)
+    } finally {
+      setLoadingDetails(false)
     }
   }
 
@@ -492,6 +550,137 @@ export default function AdminOrdersPage() {
               </div>
             )}
           </div>
+
+          {/* Order Details Modal */}
+          {showDetailsModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+                  <h2 className="text-xl font-bold text-gray-900">Order Details</h2>
+                  <button
+                    onClick={() => setShowDetailsModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {loadingDetails ? (
+                  <div className="p-8 text-center">
+                    <div className="animate-spin h-12 w-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading order details...</p>
+                  </div>
+                ) : selectedOrderDetails ? (
+                  <div className="p-6 space-y-6">
+                    {/* Order Info */}
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">Order Number</h3>
+                        <p className="mt-1 text-lg font-semibold text-gray-900">{selectedOrderDetails.order_number}</p>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">Status</h3>
+                        <span className={`mt-1 inline-flex px-3 py-1 text-sm font-semibold rounded-full ${statusColors[selectedOrderDetails.status]}`}>
+                          {selectedOrderDetails.status.charAt(0).toUpperCase() + selectedOrderDetails.status.slice(1)}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">Customer</h3>
+                        <p className="mt-1 text-gray-900">{selectedOrderDetails.customer_name}</p>
+                        <p className="text-sm text-gray-600">{selectedOrderDetails.customer_email}</p>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-gray-500">Order Date</h3>
+                        <p className="mt-1 text-gray-900">{formatDate(selectedOrderDetails.created_at)}</p>
+                      </div>
+                    </div>
+
+                    {/* Order Items */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {selectedOrderDetails.items && selectedOrderDetails.items.length > 0 ? (
+                              selectedOrderDetails.items.map((item) => (
+                                <tr key={item.product_id}>
+                                  <td className="px-6 py-4 text-sm text-gray-900">{item.product_name}</td>
+                                  <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(item.unit_price)}</td>
+                                  <td className="px-6 py-4 text-sm text-gray-900">{item.quantity}</td>
+                                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{formatCurrency(item.unit_price * item.quantity)}</td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                                  <p className="font-medium">Order items data not available</p>
+                                  <p className="text-xs mt-1">Order contains {selectedOrderDetails.items_count || 0} item(s)</p>
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Order Summary */}
+                    <div className="border-t border-gray-200 pt-4">
+                      <div className="flex justify-end">
+                        <div className="w-64 space-y-2">
+                          {selectedOrderDetails.subtotal !== undefined && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Subtotal:</span>
+                              <span className="text-gray-900">{formatCurrency(selectedOrderDetails.subtotal)}</span>
+                            </div>
+                          )}
+                          {selectedOrderDetails.tax !== undefined && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Tax:</span>
+                              <span className="text-gray-900">{formatCurrency(selectedOrderDetails.tax)}</span>
+                            </div>
+                          )}
+                          {selectedOrderDetails.shipping !== undefined && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Shipping:</span>
+                              <span className="text-gray-900">{formatCurrency(selectedOrderDetails.shipping)}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between text-lg font-bold border-t border-gray-200 pt-2">
+                            <span className="text-gray-900">Total:</span>
+                            <span className="text-gray-900">{formatCurrency(selectedOrderDetails.total_amount)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Close Button */}
+                    <div className="flex justify-end pt-4">
+                      <button
+                        onClick={() => setShowDetailsModal(false)}
+                        className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-gray-500">
+                    No order details available
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </AdminLayout>
     </AdminGuard>

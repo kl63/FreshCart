@@ -10,6 +10,10 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [sortBy, setSortBy] = useState('featured')
+  const [filterType, setFilterType] = useState('all')
 
   useEffect(() => {
     let mounted = true
@@ -82,6 +86,53 @@ export default function ProductsPage() {
     }
   }, [])
 
+  // Filter products based on search, category, and special filters
+  const filteredProducts = products.filter(product => {
+    // Search filter
+    if (searchTerm && !product.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false
+    }
+
+    // Category filter
+    if (selectedCategory !== 'all') {
+      const categoryName = typeof product.category === 'object' ? product.category?.name : product.category
+      if (categoryName !== selectedCategory) {
+        return false
+      }
+    }
+
+    // Special filters
+    if (filterType === 'on-sale' && !product.is_on_sale) return false
+    if (filterType === 'organic' && !product.is_organic) return false
+    if (filterType === 'in-stock' && !product.in_stock) return false
+    if (filterType === 'under-5' && product.price >= 5) return false
+    if (filterType === 'under-10' && product.price >= 10) return false
+
+    return true
+  })
+
+  // Sort products
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case 'price-low':
+        return a.price - b.price
+      case 'price-high':
+        return b.price - a.price
+      case 'rating':
+        return (b.rating_average || 0) - (a.rating_average || 0)
+      case 'newest':
+        // Sort by created_at if available, otherwise treat as equal
+        const dateA = (a as any).created_at ? new Date((a as any).created_at).getTime() : 0
+        const dateB = (b as any).created_at ? new Date((b as any).created_at).getTime() : 0
+        return dateB - dateA
+      default: // featured
+        // Prioritize featured products if the field exists
+        const aFeatured = (a as any).is_featured ? 1 : 0
+        const bFeatured = (b as any).is_featured ? 1 : 0
+        return bFeatured - aFeatured
+    }
+  })
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -133,7 +184,7 @@ export default function ProductsPage() {
           </p>
           <div className="mt-6">
             <Badge variant="secondary" className="text-sm">
-              {products.length} products available
+              {sortedProducts.length} of {products.length} products
             </Badge>
           </div>
         </div>
@@ -145,55 +196,119 @@ export default function ProductsPage() {
             <input
               type="text"
               placeholder="Search products..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
 
           {/* Filter Controls */}
           <div className="flex flex-wrap gap-4 justify-center">
-            <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-              <option>All Categories</option>
+            <select 
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="all">All Categories</option>
               {mockCategories.map(category => (
-                <option key={category.id} value={category.slug}>
+                <option key={category.id} value={category.name}>
                   {category.name}
                 </option>
               ))}
             </select>
             
-            <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-              <option>Sort by: Featured</option>
-              <option>Price: Low to High</option>
-              <option>Price: High to Low</option>
-              <option>Rating</option>
-              <option>Newest</option>
+            <select 
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="featured">Sort by: Featured</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="rating">Rating</option>
+              <option value="newest">Newest</option>
             </select>
 
-            <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-              <option>All Products</option>
-              <option>In Stock Only</option>
-              <option>On Sale</option>
-              <option>Organic</option>
-              <option>Fresh</option>
+            <select 
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            >
+              <option value="all">All Products</option>
+              <option value="in-stock">In Stock Only</option>
+              <option value="on-sale">On Sale</option>
+              <option value="organic">Organic</option>
             </select>
           </div>
 
           {/* Quick Filters */}
           <div className="flex flex-wrap gap-2 justify-center">
-            <Button variant="outline" size="sm">All</Button>
-            <Button variant="outline" size="sm">On Sale</Button>
-            <Button variant="outline" size="sm">Organic</Button>
-            <Button variant="outline" size="sm">Fresh</Button>
-            <Button variant="outline" size="sm">Under $5</Button>
-            <Button variant="outline" size="sm">Under $10</Button>
+            <Button 
+              variant={filterType === 'all' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setFilterType('all')}
+            >
+              All
+            </Button>
+            <Button 
+              variant={filterType === 'on-sale' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setFilterType('on-sale')}
+            >
+              On Sale
+            </Button>
+            <Button 
+              variant={filterType === 'organic' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setFilterType('organic')}
+            >
+              Organic
+            </Button>
+            <Button 
+              variant={filterType === 'in-stock' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setFilterType('in-stock')}
+            >
+              In Stock
+            </Button>
+            <Button 
+              variant={filterType === 'under-5' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setFilterType('under-5')}
+            >
+              Under $5
+            </Button>
+            <Button 
+              variant={filterType === 'under-10' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setFilterType('under-10')}
+            >
+              Under $10
+            </Button>
           </div>
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product: Product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {sortedProducts.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🔍</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
+            <p className="text-gray-600 mb-4">Try adjusting your filters or search term</p>
+            <Button onClick={() => {
+              setSearchTerm('')
+              setSelectedCategory('all')
+              setFilterType('all')
+            }}>
+              Clear Filters
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {sortedProducts.map((product: Product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
 
         {/* Load More */}
         <div className="text-center mt-12">

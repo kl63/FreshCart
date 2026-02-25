@@ -84,8 +84,8 @@ export default function CategoryGrid() {
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, index) => (
-              <Card key={index} className="bg-white animate-pulse">
-                <CardContent className="p-6 text-center">
+              <Card key={index} className="bg-white animate-pulse p-0">
+                <CardContent className="p-6 text-center px-6">
                   <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto mb-4"></div>
                   <div className="h-4 bg-gray-200 rounded mb-2"></div>
                   <div className="h-3 bg-gray-200 rounded mb-3"></div>
@@ -124,7 +124,7 @@ export default function CategoryGrid() {
               
               return (
                 <Link key={category.id} href={`/categories/${category.slug}`}>
-                  <Card className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white border-0 shadow-lg overflow-hidden relative h-80">
+                  <Card className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white border-0 shadow-lg overflow-hidden relative h-80 p-0">
                     {/* Featured badge */}
                     {category.is_featured && (
                       <div className="absolute top-3 right-3 z-10">
